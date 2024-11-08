@@ -2,12 +2,11 @@ data:extend({
     {
         type = "item",
         name = "ring-teleporter",
-        icon = "__ring-teleporter__/graphics/icons/ring-teleporter.png",
+        icon = "__transport-ring-teleporter__/graphics/icons/ring-teleporter.png",
         icon_size = 256,
-        subgroup = "production-machine",
         order = "z[ring-teleporter]",
         place_result = "ring-teleporter",
-        stack_size = 50,
+        stack_size = 1,
         subgroup = "transport"
     },
     {
@@ -20,7 +19,7 @@ data:extend({
             {type="item", name="processing-unit", amount=300},
             {type="item", name="concrete", amount=200},
             {type="item", name="low-density-structure", amount=200},
-            {type="item", name="accumulator", amount=100},
+            {type="item", name="accumulator", amount=500},
         },
         results = {{type="item", name="ring-teleporter", amount=1}},
         subgroup = "transport",
@@ -29,10 +28,11 @@ data:extend({
     {
         type = "accumulator",
         name = "ring-teleporter",
-        icon = "__ring-teleporter__/graphics/icons/ring-teleporter.png",
+        icon = "__transport-ring-teleporter__/graphics/icons/ring-teleporter.png",
         icon_size = 256,
         flags = {"placeable-neutral", "player-creation"},
         minable = {mining_time = 1, result = "ring-teleporter"},
+        factoriopedia_description = {"factoriopedia-description.ring-teleporter"},
         remove_decoratives = "true",
         max_health = 5000,
         corpse = "medium-remnants",
@@ -43,34 +43,34 @@ data:extend({
         },
         chargable_graphics = {
             picture = {
-                filename = "__ring-teleporter__/graphics/entity/ring-teleporter/ring-teleporter-masked.png",
+                filename = "__transport-ring-teleporter__/graphics/entity/ring-teleporter/ring-teleporter-masked.png",
                     width = 512,
                     height = 512,
                     scale = 0.8,
             }
         },
-        selection_box = {{-4, -2}, {4, 1}},
+        selection_box = {{3.5, 4}, {4.5, 5}},
         energy_source = {
             type = "electric",
             usage_priority = "secondary-input",
-            buffer_capacity = "1GJ",
-            input_flow_limit = "100MW"
+            buffer_capacity = "2GJ",
+            input_flow_limit = "200MW"
         },
         circuit_connector = {
             points = {
                 shadow = {
-                    green = {3.8, 3.21},
-                    red = {3.8, 3.26}
+                    green = {3.8, 4.21},
+                    red = {3.8, 4.26}
                 },
                 wire = {
-                    green = {3.8, 3.2},
-                    red = {3.8, 3.25}
+                    green = {3.8, 4.2},
+                    red = {3.8, 4.25}
                 }
             }
         },
         circuit_wire_max_distance = 20,
         factoriopedia_simulation = {
-            init = "game.simulation.camera_position = {0, 1}\n    game.surfaces[1].create_entity{name = \"ring-teleporter-back\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.surfaces[1].create_entity{name = \"ring-teleporter-front\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.simulation.camera_zoom = 1"
+            init = "game.simulation.camera_position = {0, 1}\n    game.surfaces[1].create_entity{name = \"ring-teleporter-back\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.surfaces[1].create_entity{name = \"ring-teleporter-front\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.simulation.camera_zoom = 0.85"
         }
     },
     {
@@ -83,7 +83,7 @@ data:extend({
         animations = {
             layers = {
                 {
-                    filename = "__ring-teleporter__/graphics/entity/ring-teleporter/ring-teleporter.png",
+                    filename = "__transport-ring-teleporter__/graphics/entity/ring-teleporter/ring-teleporter.png",
                     width = 512,
                     height = 512,
                     scale = 0.8
@@ -101,7 +101,7 @@ data:extend({
         animations = {
             layers = {
                 {
-                    filename = "__ring-teleporter__/graphics/entity/ring-teleporter/ring-teleporter-back.png",
+                    filename = "__transport-ring-teleporter__/graphics/entity/ring-teleporter/ring-teleporter-back.png",
                     width = 512,
                     height = 512,
                     frame_count = 200,
@@ -124,7 +124,7 @@ data:extend({
         animations = {
             layers = {
                 {
-                    filename = "__ring-teleporter__/graphics/entity/ring-teleporter/ring-teleporter-front.png",
+                    filename = "__transport-ring-teleporter__/graphics/entity/ring-teleporter/ring-teleporter-front.png",
                     width = 512,
                     height = 512,
                     frame_count = 200,
@@ -140,37 +140,37 @@ data:extend({
     {
         type = "sound",
         name = "ring-1",
-        filename = "__ring-teleporter__/sound/ring-1.ogg",
+        filename = "__transport-ring-teleporter__/sound/ring-1.ogg",
         volume = 1
     },
     {
         type = "sound",
         name = "ring-2",
-        filename = "__ring-teleporter__/sound/ring-2.ogg",
+        filename = "__transport-ring-teleporter__/sound/ring-2.ogg",
         volume = 1
     },
     {
         type = "sound",
         name = "ring-3",
-        filename = "__ring-teleporter__/sound/ring-3.ogg",
+        filename = "__transport-ring-teleporter__/sound/ring-3.ogg",
         volume = 1
     },
     {
         type = "sound",
         name = "ring-4",
-        filename = "__ring-teleporter__/sound/ring-4.ogg",
+        filename = "__transport-ring-teleporter__/sound/ring-4.ogg",
         volume = 1
     },
     {
         type = "sound",
         name = "ring-5",
-        filename = "__ring-teleporter__/sound/ring-5.ogg",
+        filename = "__transport-ring-teleporter__/sound/ring-5.ogg",
         volume = 1
     },
     {
         type = "virtual-signal",
         name = "ring-id",
-        icon = "__ring-teleporter__/graphics/icons/ring-id.png",
+        icon = "__transport-ring-teleporter__/graphics/icons/ring-id.png",
         icon_size = 64,
         subgroup = "virtual-signal",
         order = "z[ring-id]"
@@ -178,7 +178,7 @@ data:extend({
     {
         type = "virtual-signal",
         name = "goto-ring-id",
-        icon = "__ring-teleporter__/graphics/icons/goto-ring-id.png",
+        icon = "__transport-ring-teleporter__/graphics/icons/goto-ring-id.png",
         icon_size = 64,
         subgroup = "virtual-signal",
         order = "z[ring-id]"
@@ -199,9 +199,9 @@ data:extend({
     {
         type = "technology",
         name = "teleporter-rings",
-        icon = "__ring-teleporter__/graphics/technology/rings.png",
+        icon = "__transport-ring-teleporter__/graphics/technology/rings.png",
         icon_size = 656,
-        prerequisites = {"utility-science-pack", "circuit-network"},
+        prerequisites = {"space-science-pack", "circuit-network"},
         effects = {
             {
                 type = "unlock-recipe",
@@ -215,9 +215,10 @@ data:extend({
                 {"logistic-science-pack", 1},
                 {"chemical-science-pack", 1},
                 {"production-science-pack", 1},
-                {"utility-science-pack", 1}
+                {"utility-science-pack", 1},
+                {"space-science-pack", 1}
             },
-            time = 30
+            time = 60
         },
     }
 })

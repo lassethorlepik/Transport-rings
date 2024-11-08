@@ -1,6 +1,13 @@
+local Util = {}
 
-local function get_relative_position(entity_a, entity_b)
-    -- Validate that both entities are provided
+function Util.add_positions(pos1, pos2)
+    return {
+        x = pos1.x + pos2.x,
+        y = pos1.y + pos2.y
+    }
+end
+
+function Util.get_relative_position(entity_a, entity_b)
     if not entity_a or not entity_b then
         return nil
     end
@@ -16,7 +23,7 @@ local function get_relative_position(entity_a, entity_b)
     return {x = relative_x, y = relative_y}
 end
 
-local function can_vanilla_teleport(entity)
+function Util.can_vanilla_teleport(entity)
     if entity.type == "character" then
         return true
     elseif entity.type == "car" then
@@ -27,7 +34,7 @@ local function can_vanilla_teleport(entity)
     return false
 end
 
-local function play_random_sound(entity, sounds)
+function Util.play_random_sound(entity, sounds)
     local random_index = math.random(#sounds)
     local selected_sound = sounds[random_index]
     if entity and entity.valid then
@@ -38,20 +45,27 @@ local function play_random_sound(entity, sounds)
     end
 end
 
-local function schedule_after(delay_ticks, func)
+-- Every scheduled function needs to be listed in function_map for serialization
+function Util.schedule_after(delay_ticks, func_id, params)
     if delay_ticks <= 0 then
-        game.print("Invalid function scheduling request with " .. tostring(delay_ticks) .. " ticks for function " .. tostring(func))
+        Util.Execute(func_id, params)
         return
     end
     -- Calculate the target tick when the function should be executed
     local target_tick = game.tick + delay_ticks
     -- Insert the scheduled function into the table
-    table.insert(storage.ring_teleporter_scheduled_functions, {tick = target_tick, func = func})
+    table.insert(storage.ring_teleporter_scheduled_functions, {tick = target_tick, func_id = func_id, params = params})
 end
 
-local function add_positions(pos1, pos2)
-    return {
-        x = pos1.x + pos2.x,
-        y = pos1.y + pos2.y
-    }
+-- Execute a function based on id
+function Util.Execute(func_id, params)
+    log("Execute: " .. func_id .. ", params: " .. tostring(params))
+    local func = Function_map[func_id]
+    if params == nil then
+        func(params)
+    else
+        func(table.unpack(params))
+    end
 end
+
+return Util
