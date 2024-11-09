@@ -56,7 +56,6 @@ local function teleport_train(entity, target_surface, target_position)
         }
         local entity = data.entity
         if entity.valid then
-            game.print(entity.name)
             local new_carriage = entity.clone{position=new_pos, surface=target_surface, force=force, create_build_effect_smoke=false}
             if new_carriage then
                 data.entity.destroy()

@@ -4,7 +4,7 @@ data:extend({
         name = "ring-teleporter",
         icon = "__transport-ring-teleporter__/graphics/icons/ring-teleporter.png",
         icon_size = 256,
-        order = "z0[ring-teleporter]",
+        order = "z2[ring-teleporter]",
         place_result = "ring-teleporter",
         stack_size = 1,
         subgroup = "transport"
@@ -25,7 +25,7 @@ data:extend({
         },
         results = {{type="item", name="ring-teleporter", amount=1}},
         subgroup = "transport",
-        order = "z0[ring-teleporter]"
+        order = "z2[ring-teleporter]"
     },
     {
         type = "item",
@@ -56,7 +56,7 @@ data:extend({
         name = "transport-ring-2",
         icon = "__transport-ring-teleporter__/graphics/icons/ring-2.png",
         icon_size = 256,
-        order = "z2[ring-teleporter]",
+        order = "z3[ring-teleporter]",
         stack_size = 5,
         subgroup = "transport"
     },
@@ -75,14 +75,14 @@ data:extend({
         },
         results = {{type="item", name="transport-ring-2", amount=1}},
         subgroup = "transport",
-        order = "z2[ring-teleporter]"
+        order = "z3[ring-teleporter]"
     },
     {
         type = "item",
         name = "ring-teleporter-2",
         icon = "__transport-ring-teleporter__/graphics/icons/ring-teleporter-2.png",
         icon_size = 256,
-        order = "z3[ring-teleporter]",
+        order = "z4[ring-teleporter]",
         
         stack_size = 1,
         subgroup = "transport"
@@ -106,14 +106,14 @@ data:extend({
         },
         results = {{type="item", name="ring-teleporter-2", amount=1}},
         subgroup = "transport",
-        order = "z3[ring-teleporter]"
+        order = "z4[ring-teleporter]"
     },
     {
         type = "item",
         name = "ring-teleporter-2-platform",
         icon = "__transport-ring-teleporter__/graphics/icons/ring-platform.png",
         icon_size = 256,
-        order = "z4[ring-teleporter]",
+        order = "z5[ring-teleporter]",
 
         stack_size = 1,
         subgroup = "transport"
@@ -131,7 +131,7 @@ data:extend({
         },
         results = {{type="item", name="ring-teleporter-2-platform", amount=1}},
         subgroup = "transport",
-        order = "z4[ring-teleporter]"
+        order = "z5[ring-teleporter]"
     },
     {
         type = "simple-entity-with-force",
