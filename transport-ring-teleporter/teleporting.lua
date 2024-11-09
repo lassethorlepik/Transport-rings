@@ -58,6 +58,7 @@ local function teleport_train(entity, target_surface, target_position)
         if entity.valid then
             local new_carriage = entity.clone{position=new_pos, surface=target_surface, force=force, create_build_effect_smoke=false}
             if new_carriage then
+                new_carriage.set_driver(entity.get_driver())
                 data.entity.destroy()
             end
             table.insert(new_carriages, new_carriage)
