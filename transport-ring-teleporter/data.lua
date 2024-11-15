@@ -98,7 +98,7 @@ data:extend({
             {type="item", name="radar", amount=1},
             {type="item", name="refined-concrete", amount=100},
             {type="item", name="low-density-structure", amount=100},
-            {type="item", name="transport-ring", amount=5},
+            {type="item", name="transport-ring-2", amount=5},
             {type="item", name="display-panel", amount=1},
             {type="item", name="superconductor", amount=200},
             {type="item", name="supercapacitor", amount=500},
@@ -341,71 +341,5 @@ data:extend({
         factoriopedia_simulation = {
             init = "game.simulation.camera_position = {0, 1}\ngame.surfaces[1].create_entity{name = \"ring-teleporter-sprite\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.surfaces[1].create_entity{name = \"ring-teleporter-back\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.surfaces[1].create_entity{name = \"ring-teleporter-front\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.simulation.camera_zoom = 0.85"
         }
-    },
-    {
-        type = "technology",
-        name = "teleporter-rings",
-        icon = "__transport-ring-teleporter__/graphics/technology/rings.png",
-        icon_size = 656,
-        prerequisites = {"space-science-pack", "circuit-network"},
-        effects = {
-            {
-                type = "unlock-recipe",
-                recipe = "transport-ring"
-            },
-            {
-                type = "unlock-recipe",
-                recipe = "ring-teleporter"
-            },
-        },
-        unit = {
-            count = 1000,
-            ingredients = {
-                {"automation-science-pack", 1},
-                {"logistic-science-pack", 1},
-                {"chemical-science-pack", 1},
-                {"production-science-pack", 1},
-                {"utility-science-pack", 1},
-                {"space-science-pack", 1}
-            },
-            time = 60
-        },
-    },
-    {
-        type = "technology",
-        name = "teleporter-rings-advanced",
-        icon = "__transport-ring-teleporter__/graphics/technology/rings-2.png",
-        icon_size = 1024,
-        prerequisites = {"promethium-science-pack", "teleporter-rings"},
-        effects = {
-            {
-                type = "unlock-recipe",
-                recipe = "transport-ring-2"
-            },
-            {
-                type = "unlock-recipe",
-                recipe = "ring-teleporter-2"
-            },
-            {
-                type = "unlock-recipe",
-                recipe = "ring-teleporter-2-platform"
-            },
-        },
-        unit = {
-            count = 500,
-            ingredients = {
-                {"automation-science-pack", 1},
-                {"logistic-science-pack", 1},
-                {"chemical-science-pack", 1},
-                {"production-science-pack", 1},
-                {"utility-science-pack", 1},
-                {"space-science-pack", 1},
-                {"metallurgic-science-pack", 1},
-                {"electromagnetic-science-pack", 1},
-                {"cryogenic-science-pack", 1},
-                {"promethium-science-pack", 1}
-            },
-            time = 60
-        },
     }
 })

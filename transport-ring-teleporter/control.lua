@@ -81,7 +81,7 @@ local function create_barrier(entity)
         if not surface.can_place_entity{name = barrier_name, position = pos} then
             ring_collision_incident(surface, pos, entity)
         end
-        local placed_entity = surface.create_entity{name = barrier_name, position = pos}
+        local placed_entity = surface.create_entity{name = barrier_name, position = pos, force = entity.force}
         if placed_entity then
             table.insert(barrier, placed_entity)
         end
@@ -134,6 +134,7 @@ local function animate_teleporter(entity)
     local animation1 = surface.create_entity{
         name = "ring-teleporter-back",
         position = position,
+        force = entity.force,
         raise_built = false,
         create_build_effect_smoke = false,
     }
@@ -141,6 +142,7 @@ local function animate_teleporter(entity)
     local animation2 = surface.create_entity{
         name = "ring-teleporter-front",
         position = position,
+        force = entity.force,
         raise_built = false,
         create_build_effect_smoke = false,
     }
@@ -286,6 +288,7 @@ local function on_built(event)
         local renderer = surf.create_entity{
             name = "ring-teleporter-sprite",
             position = {x = entity.position.x - 4.5, y = entity.position.y - 4.5},
+            force = entity.force,
             raise_built = false,
             create_build_effect_smoke = true,
         }
@@ -303,6 +306,7 @@ local function on_built(event)
         local renderer = surf.create_entity{
             name = "ring-teleporter-sprite",
             position = {x = entity.position.x, y = entity.position.y},
+            force = entity.force,
             raise_built = false,
             create_build_effect_smoke = true,
         }
