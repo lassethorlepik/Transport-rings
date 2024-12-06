@@ -82,7 +82,7 @@ function Teleporting.ring_teleport(entity, target_surface, target_position)
     if Teleporter_ignored_entities[entity.name] or entity.type == "entity-ghost" then return end
 
     if util.can_vanilla_teleport(entity) then
-        entity.teleport(target_position, target_surface)
+        entity.teleport(target_position, target_surface, true)
         if entity.type == "character" then
             local player = entity.player
             if player and player.valid then

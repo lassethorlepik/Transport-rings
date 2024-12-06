@@ -1,0 +1,41 @@
+---------------------------------------------------------------------------------------------------
+Version: 0.2.5
+Date: 06.12.2024
+  Features:
+    - UI now supports nicknaming teleporters. Players can only rename teleporters owned by their force to avoid griefing. Defaults to a random backer name.
+    - Currently opened teleporter in now displayed in the manual dialing list to allow renaming (always top row).
+    - Teleporters are now sorted in UI by force, planet, surface, nickname
+---------------------------------------------------------------------------------------------------
+Version: 0.2.4
+Date: 29.11.2024
+  Features:
+    - Added customizeable multiplier settings for both teleport energy cost and buffer size.
+  Bugfixes:
+    - Rollback of 0.2.3 accumulator charging as things seem more complicated.
+---------------------------------------------------------------------------------------------------
+Version: 0.2.3
+Date: 29.11.2024
+  Bugfixes:
+    - Teleporters now charge from accumulators.
+    - Migrations are applied automatically after on_configuration_changed().
+---------------------------------------------------------------------------------------------------
+Version: 0.2.2
+Date: 28.11.2024
+  Features:
+    - GUI now displays IDs assigned by circuit signals.
+  Bugfixes:
+    - GUI title is now a localized string.
+---------------------------------------------------------------------------------------------------
+Version: 0.2.1
+Date: 28.11.2024
+  Bugfixes:
+    - Biters no longer eat graphics of teleporters.
+---------------------------------------------------------------------------------------------------
+Version: 0.2.0
+Date: 28.11.2024
+  Features:
+    - Added GUI for manual dialing.
+    - Teleporters now have area light-up effects and massive ring shadows.
+  Bugfixes:
+    - Adjusted sprite shift to reduce culling.
+    - Teleporters no longer output power like accumulators.

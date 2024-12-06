@@ -1,3 +1,5 @@
+local util = require("util")
+
 data:extend({
     {
         type = "item",
@@ -136,7 +138,6 @@ data:extend({
     {
         type = "simple-entity-with-force",
         name = "ring-teleporter-sprite",
-        destructible = false,
         render_layer = "lower-object-overlay",
         flags = {"placeable-off-grid"},
         collision_mask = {
@@ -146,10 +147,17 @@ data:extend({
         animations = {
             layers = {
                 {
+                    filename = "__transport-ring-teleporter__/graphics/entity/ring-teleporter/ring-teleporter-shadow-still.png",
+                    size = 256,
+                    scale = 4,
+                    draw_as_shadow = true,
+                    shift = {0, -1.5 + 6.7}
+                },
+                {
                     filename = "__transport-ring-teleporter__/graphics/entity/ring-teleporter/ring-teleporter.png",
-                    width = 512,
-                    height = 512,
-                    scale = 0.8
+                    size = 512,
+                    scale = 0.8,
+                    shift = {0, -1.5}
                 }
             }
         }
@@ -157,7 +165,6 @@ data:extend({
     {
         type = "simple-entity-with-force",
         name = "ring-teleporter-back",
-        destructible = false,
         render_layer = "object-under",
         flags = {"placeable-off-grid"},
         collision_mask = {
@@ -167,15 +174,25 @@ data:extend({
         animations = {
             layers = {
                 {
+                    filename = "__transport-ring-teleporter__/graphics/entity/ring-teleporter/ring-teleporter-shadows.png",
+                    size = 256,
+                    frame_count = 200,
+                    line_length = 16,
+                    scale = 4,
+                    animation_speed = 0.6666667,
+                    --draw_as_shadow = true,
+                    repeat_count = 1,
+                    shift = {0, -1.5 + 6.7}
+                },
+                {
                     filename = "__transport-ring-teleporter__/graphics/entity/ring-teleporter/ring-teleporter-back.png",
-                    width = 512,
-                    height = 512,
+                    size = 512,
                     frame_count = 200,
                     line_length = 16,
                     scale = 0.8,
                     animation_speed = 0.6666667,
-                    draw_as_glow = true,
-                    repeat_count = 1
+                    repeat_count = 1,
+                    shift = {0, -1.5}
                 }
             }
         }
@@ -183,7 +200,6 @@ data:extend({
     {
         type = "simple-entity-with-force",
         name = "ring-teleporter-front",
-        destructible = false,
         render_layer = "cargo-hatch",
         flags = {"placeable-off-grid"},
         collision_mask = {
@@ -194,17 +210,29 @@ data:extend({
             layers = {
                 {
                     filename = "__transport-ring-teleporter__/graphics/entity/ring-teleporter/ring-teleporter-front.png",
-                    width = 512,
-                    height = 512,
+                    size = 512,
                     frame_count = 200,
                     line_length = 16,
                     scale = 0.8,
                     animation_speed = 0.6666667,
-                    draw_as_glow = true,
-                    repeat_count = 1
+                    repeat_count = 1,
+                    shift = {0, -1.5}
+                },
+                {
+                    filename = "__transport-ring-teleporter__/graphics/entity/ring-teleporter/light-medium.png",
+                    size = 300,
+                    frame_count = 200,
+                    scale = 8,
+                    draw_as_light = true,
+                    shift = {0, -1.5},
+                    frame_sequence = {
+                        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+                        2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+                        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+                    }
                 }
             }
-        }
+        },
     },
     {
         type = "sound",
@@ -280,47 +308,10 @@ data:extend({
         hidden = true
     },
     {
-        type = "accumulator",
-        name = "ring-teleporter",
-        flags = {"placeable-neutral", "player-creation"},
-        collision_box = {{-0.5, 0}, {0.9, 1.49}},
-        selection_box = {{-1, -0.5}, {1.25, 1.75}},
-        icon = "__transport-ring-teleporter__/graphics/icons/ring-teleporter.png",
-        icon_size = 256,
-        minable = {mining_time = 3, result = "ring-teleporter"},
-        remove_decoratives = "true",
-        max_health = 5000,
-        corpse = "medium-remnants",
-        dying_explosion = "medium-explosion",
-        energy_source = {
-            type = "electric",
-            usage_priority = "secondary-input",
-            buffer_capacity = "2GJ",
-            input_flow_limit = "200MW"
-        },
-        circuit_connector = {
-            points = {
-                shadow = {
-                    green = {0.7, 0.01},
-                    red = {-0.48, 0.06}
-                },
-                wire = {
-                    green = {0.7, 0},
-                    red = {-0.48, 0.05}
-                }
-            }
-        },
-        circuit_wire_max_distance = 20,
-        factoriopedia_simulation = {
-            init = "game.simulation.camera_position = {0, 1}\ngame.surfaces[1].create_entity{name = \"ring-teleporter-sprite\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.surfaces[1].create_entity{name = \"ring-teleporter-back\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.surfaces[1].create_entity{name = \"ring-teleporter-front\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.simulation.camera_zoom = 0.85"
-        }
-    },
-    {
         type = "simple-entity-with-force",
         name = "ring-teleporter-placer",
         icon = "__transport-ring-teleporter__/graphics/icons/ring-teleporter.png",
         icon_size = 256,
-        destructible = false,
         remove_decoratives = "true",
         max_health = 5000,
         hidden = true,
@@ -339,7 +330,93 @@ data:extend({
         order = "z[ring-teleporter]",
         subgroup = "transport",
         factoriopedia_simulation = {
-            init = "game.simulation.camera_position = {0, 1}\ngame.surfaces[1].create_entity{name = \"ring-teleporter-sprite\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.surfaces[1].create_entity{name = \"ring-teleporter-back\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.surfaces[1].create_entity{name = \"ring-teleporter-front\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.simulation.camera_zoom = 0.85"
+            init = "game.simulation.camera_position = {0, 0}\ngame.surfaces[1].create_entity{name = \"ring-teleporter-sprite\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.surfaces[1].create_entity{name = \"ring-teleporter-back\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.surfaces[1].create_entity{name = \"ring-teleporter-front\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.simulation.camera_zoom = 0.8"
+        }
+    },
+    {
+        type = "sprite",
+        name = "diode-red",
+        filename = "__core__/graphics/status.png",
+        flags = {
+            "gui-icon"
+        },
+        scale = 1.5,
+        size = {
+            32,
+            32
+        },
+        x = 32
+    },
+    {
+        type = "sprite",
+        name = "diode-yellow",
+        filename = "__core__/graphics/status.png",
+        flags = {
+            "gui-icon"
+        },
+        scale = 1.5,
+        size = {
+            32,
+            32
+        },
+        x = 64
+    },
+    {
+        type = "sprite",
+        name = "diode-green",
+        filename = "__core__/graphics/status.png",
+        flags = {
+            "gui-icon"
+        },
+        scale = 1.5,
+        size = {
+            32,
+            32
         }
     }
 })
+
+local power_per_teleport = settings.startup["trt-power-multiplier"].value * 1000000000
+local power_buffer = math.max(power_per_teleport, settings.startup["trt-buffer-multiplier"].value * 2000000000)
+
+local teleporter = {
+    type = "accumulator",
+    name = "ring-teleporter",
+    flags = {"placeable-neutral", "player-creation"},
+    collision_box = {{-0.5, 0}, {0.9, 1.49}},
+    selection_box = {{-1, -0.5}, {1.25, 1.75}},
+    icon = "__transport-ring-teleporter__/graphics/icons/ring-teleporter.png",
+    icon_size = 256,
+    minable = {mining_time = 3, result = "ring-teleporter"},
+    remove_decoratives = "true",
+    max_health = 5000,
+    corpse = "medium-remnants",
+    dying_explosion = "medium-explosion",
+    energy_source = {
+        type = "electric",
+        usage_priority = "secondary-input",
+        buffer_capacity = util.format_power_string(power_buffer, "J", ""),
+        input_flow_limit = util.format_power_string(power_buffer / 10, "W", ""),
+        output_flow_limit = "0W"
+    },
+    circuit_connector = {
+        points = {
+            shadow = {
+                green = {0.7, 0.1},
+                red = {-0.48, 0.15}
+            },
+            wire = {
+                green = {0.7, 0},
+                red = {-0.48, 0.05}
+            }
+        }
+    },
+    circuit_wire_max_distance = 20,
+    factoriopedia_simulation = {
+        init = "game.simulation.camera_position = {0, 0}\ngame.surfaces[1].create_entity{name = \"ring-teleporter-sprite\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.surfaces[1].create_entity{name = \"ring-teleporter-back\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.surfaces[1].create_entity{name = \"ring-teleporter-front\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.simulation.camera_zoom = 0.8"
+    },
+    alert_icon_shift = {0.125, 0.5},
+    localised_description = {"entity-description.ring-teleporter", util.format_power_string(power_per_teleport, "J", " ")}
+}
+
+data:extend({teleporter})

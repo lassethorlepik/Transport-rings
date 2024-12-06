@@ -7,6 +7,10 @@ function Util.add_positions(pos1, pos2)
     }
 end
 
+function Util.distance(pos1, pos2)
+    return ((pos1.x - pos2.x)^2 + (pos1.y - pos2.y)^2)^0.5
+end
+
 function Util.get_relative_position(entity_a, entity_b)
     if not entity_a or not entity_b then
         return nil
@@ -66,6 +70,90 @@ function Util.Execute(func_id, params)
     else
         func(table.unpack(params))
     end
+end
+
+-- Return power as a string
+function Util.format_power_string(value, unit_type, space)
+    local energy_units = {
+        { unit = "PJ", threshold = 1e15, factor = 1e-15 }, -- Petajoule
+        { unit = "TJ", threshold = 1e12, factor = 1e-12 }, -- Terajoule
+        { unit = "GJ", threshold = 1e9,  factor = 1e-9  }, -- Gigajoule
+        { unit = "MJ", threshold = 1e6,  factor = 1e-6  }, -- Megajoule
+        { unit = "kJ", threshold = 1e3,  factor = 1e-3  }, -- Kilojoule
+        { unit = "J",  threshold = 0,    factor = 1     }  -- Joule
+    }
+    local power_units = {
+        { unit = "PW", threshold = 1e15, factor = 1e-15 }, -- Petawatt
+        { unit = "TW", threshold = 1e12, factor = 1e-12 }, -- Terawatt
+        { unit = "GW", threshold = 1e9,  factor = 1e-9  }, -- Gigawatt
+        { unit = "MW", threshold = 1e6,  factor = 1e-6  }, -- Megawatt
+        { unit = "kW", threshold = 1e3,  factor = 1e-3  }, -- Kilowatt
+        { unit = "W",  threshold = 0,    factor = 1     }  -- Watt
+    }
+    local units = unit_type == "W" and power_units or energy_units
+    local abs_value = math.abs(value)
+    for _, unit_info in ipairs(units) do
+        if abs_value >= unit_info.threshold then
+            local scaled_value = value * unit_info.factor
+            local formatted_value = string.format("%.2f", scaled_value)
+            -- Remove trailing zeros and possible trailing decimal point
+            formatted_value = formatted_value:gsub("(%d)%.?0*$", "%1")
+            return formatted_value .. space .. unit_info.unit
+        end
+    end
+end
+
+-- Get unique identifier based on location and surface
+function Util.poskey(entity)
+    local pos = entity.position
+    return pos.x .. ";" .. pos.y .. ";" .. entity.surface.name
+end
+
+function Util.backername()
+    return game.backer_names[math.random(#game.backer_names)]
+end
+
+function Util.sort_teleporters(list, player_force_name)
+    table.sort(list, function(data_a, data_b)
+        local a = data_a.entity
+        local b = data_b.entity
+
+        -- Check that all required fields exist
+        if not (a and b and a.force and b.force and a.surface and b.surface) then
+            return false
+        end
+
+        -- Prioritize the player's force
+        if a.force.name == player_force_name and b.force.name ~= player_force_name then
+            return true
+        elseif b.force.name == player_force_name and a.force.name ~= player_force_name then
+            return false
+        end
+
+        -- Sort alphabetically by force name
+        if a.force.name ~= b.force.name then
+            return a.force.name < b.force.name
+        end
+
+        -- If force names are the same, sort by surface.planet (nil is lower priority)
+        if a.surface.planet ~= b.surface.planet then
+            if a.surface.planet == nil then
+                return false -- a has lower priority
+            elseif b.surface.planet == nil then
+                return true -- b has lower priority
+            else
+                return a.surface.planet.prototype.order < b.surface.planet.prototype.order
+            end
+        end
+
+        -- If planets are the same, sort by surface.name
+        if a.surface.name ~= b.surface.name then
+            return a.surface.name < b.surface.name
+        end
+
+        -- If surface names are the same, sort by nickname
+        return (storage.ring_teleporter_nicknames[Util.poskey(a)] or 0) < (storage.ring_teleporter_nicknames[Util.poskey(b)] or 0)
+    end)
 end
 
 return Util
