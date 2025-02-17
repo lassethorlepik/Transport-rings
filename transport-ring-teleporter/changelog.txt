@@ -1,10 +1,31 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.2.9
+Date: 17.02.2025
+  Bugfixes:
+    - Fixed misaligned collision area. Area inside rings is now 5x4 as intended, instead of 5x3.
+---------------------------------------------------------------------------------------------------
+Version: 0.2.8
+Date: 07.01.2025
+  Bugfixes:
+    - Ring colliders were not removed after animation in very specific cases.
+    - Added /ring-remap to manually solve weird bugs. Can help with invisible colliders.
+---------------------------------------------------------------------------------------------------
+Version: 0.2.7
+Date: 04.01.2025
+  Features:
+    - Added zh-CN locale provided by plexpt
+---------------------------------------------------------------------------------------------------
+Version: 0.2.6
+Date: 11.12.2024
+  Bugfixes:
+    - Teleporters no longer crash the game, if destroying themselves by ring impacts.
+---------------------------------------------------------------------------------------------------
 Version: 0.2.5
 Date: 06.12.2024
   Features:
     - UI now supports nicknaming teleporters. Players can only rename teleporters owned by their force to avoid griefing. Defaults to a random backer name.
-    - Currently opened teleporter in now displayed in the manual dialing list to allow renaming (always top row).
-    - Teleporters are now sorted in UI by force, planet, surface, nickname
+    - Currently opened teleporter is now displayed in the manual dialing list to allow renaming (always top row).
+    - Teleporters are now sorted in UI by force, planet, surface, nickname.
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.4
 Date: 29.11.2024

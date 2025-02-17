@@ -123,14 +123,18 @@ local function create_barrier(entity)
     local barrier = {}
     local left = p.x - 6.5
     local right = p.x - 2.5
-    local top = p.y - 4.25
-    local bottom = p.y - 1.25
+    local top = p.y - 4.5
+    local bottom = p.y - 1.5
+    local unit_number = entity.unit_number
     local function try_place(x, y)
         local pos = {x = x, y = y}
         if not surface.can_place_entity{name = barrier_name, position = pos} then
             ring_collision_incident(surface, pos, entity)
         end
-        local placed_entity = surface.create_entity{name = barrier_name, position = pos, force = entity.force}
+        local placed_entity
+        if entity and entity.valid then
+            placed_entity = surface.create_entity{name = barrier_name, position = pos, force = entity.force}
+        end
         if placed_entity then
             table.insert(barrier, placed_entity)
             placed_entity.destructible = false
@@ -146,11 +150,11 @@ local function create_barrier(entity)
         try_place(left - 1, y)     -- Left border
         try_place(right + 1, y)    -- Right border
     end
-    util.schedule_after(238, "destroy_barrier", {entity.unit_number})
+    util.schedule_after(238, "destroy_barrier", {unit_number, surface})
     return barrier
 end
 
-local function destroy_barrier(unit_number)
+local function destroy_barrier(unit_number, surface)
     local list = storage.ring_teleporter_barriers[unit_number]
     if list then
         for _, entity in ipairs(list) do
@@ -158,7 +162,15 @@ local function destroy_barrier(unit_number)
                 entity.destroy()
             end
         end
+    else -- This should not normally happen, unless during animation teleporter is destroyed or mod migration is applied etc
+        if surface then
+            local barriers = surface.find_entities_filtered{name="ring-teleporter-barrier"}
+            for _, barrier in ipairs(barriers) do
+                barrier.destroy()
+            end
+        end
     end
+    storage.ring_teleporter_barriers[unit_number] = nil
 end
 
 local function barrier_start(entity)
@@ -945,3 +957,21 @@ Function_map = {
     timed_teleport_animation = timed_teleport_animation,
     After_player_teleport_sound = After_player_teleport_sound
 }
+
+commands.add_command(
+    "ring-remap",
+    "Run this if you encounter bugs releated to transport rings, it may fix some.",
+
+    function(command)
+        -- Get the player who executed the command
+        local player = game.players[command.player_index]
+        -- Check if the player is an admin
+        if player and player.admin then
+            log("Player triggered remap!")
+            remap_teleporters()
+            player.print("Remap complete.")
+        else
+            player.print("You do not have admin permissions in this game.")
+        end
+    end
+)
