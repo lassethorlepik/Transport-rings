@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.3.2
+Date: 20.04.2025
+  Bugfixes:
+    - Added surface conditions compatibility fix for Cerys, Maraxsis and other top planet mods.
+---------------------------------------------------------------------------------------------------
 Version: 0.3.1
 Date: 29.03.2025
   Bugfixes:

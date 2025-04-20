@@ -101,3 +101,7 @@ end
 tech2.prerequisites = tech2_filtered_prerequisites
 
 data:extend({tech2})
+
+-- Attempt to void restrictions set by other mods
+data.raw["simple-entity-with-force"]["ring-teleporter-placer"].surface_conditions = nil
+data.raw["accumulator"]["ring-teleporter"].surface_conditions = nil
