@@ -1,9 +1,19 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.4.2 WIP
+Date: 14.12.2025 (TBD on release)
+  Features:
+    - Added "Basic/Advanced" Manual Dialing UI toggle, UI will open in "basic" mode until toggled into "advanced", setting is remembered per-player.
+    - Teleporter now supports quality - enjoy higher capacity storage in the accumulator and higher health of the teleporter before the biters eat it.
+  Bugfixes:
+    - Crash on blueprinting tiles only (no entities).
+    - Internal table of entities protected from damage on collision with the teleportation barrier included obsolete entities instead of the new versions.
+    - Fixed the icon on the protected (shield) status in the Manual Dialing UI - now on larger UI scales the drop-down becomes wide enough to show the icon and full text.
+---------------------------------------------------------------------------------------------------
 Version: 0.4.1
 Date: 15.12.2025
   Bugfixes:
     - Uses nil check for blueprints.
-	- Now displays Space Age as a dependency.
+    - Now displays Space Age as a dependency.
 ---------------------------------------------------------------------------------------------------
 Version: 0.4.0
 Date: 14.12.2025

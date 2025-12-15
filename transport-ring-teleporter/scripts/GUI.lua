@@ -20,8 +20,14 @@ local OCCUPIED_INCOMING = Teleporter.OCCUPIED_INCOMING
 local TELEPORTER_CONTROLLER = Teleporter.CONTROLLER
 
 
+-- IDs of scheduled functions
+
+local GUI_OPEN_WINDOW = "gui_open_window"
+
+
 -- Name of GUI elements
 local GUI_BASE = "teleporter_gui"
+local GUI_EXPAND_BUTTON = "teleporter_expand_button"
 local GUI_CLOSE_BUTTON = "teleporter_close_button"
 local GUI_HEADER_PANE = "header_pane"
 local GUI_HEADER_TABLE = "header_table"
@@ -49,8 +55,10 @@ local COL_LAST = COL_USER_ACTION
 local SRC_TELEPORTER_DATA_INDEX = -1
 
 
+
+
 -- Instead of setting up a metatable, just setup a couple common stubs and specifically set them in the table definition
-local function empty_element( parent ) return parent.add{ type = "flow", direction = "horizontal" } end
+local function empty_element( parent, player ) return parent.add{ type = "flow", direction = "horizontal" } end
 local function empty_update( player, element, data, entity, data_index, same_force, charge, diode, sprite, src_entity, src_ready ) end
 
 local function make_action_button_caption( diode, occupied, entity, data_index )
@@ -84,8 +92,8 @@ local teleporter_table_desc = {
     
     
     -- COL_LOCATION: Teleporter Location
-    [ COL_LOCATION ] = { caption = { "custom.position" }, style = { width = 150, horizontal_align = "left" },
-        make_filter = function( parent )
+    [ COL_LOCATION ] = { advanced = false, caption = { "custom.position" }, style = { width = 150, horizontal_align = "left" },
+        make_filter = function( parent, player )
             local items = {}
             local count = 1
             local tags = {}
@@ -162,8 +170,8 @@ local teleporter_table_desc = {
     },
     
     -- COL_ID: Teleporter ID
-    [ COL_ID ] = { caption = { "", "[virtual-signal=ring-id]" }, style = { width = 100, horizontal_align = "right" },
-        make_filter = function( parent )
+    [ COL_ID ] = { advanced = true, caption = { "", "[virtual-signal=ring-id]" }, style = { width = 100, horizontal_align = "right" },
+        make_filter = function( parent, player )
             return parent.add{
                 type = "textfield",
                 text = "",
@@ -193,8 +201,8 @@ local teleporter_table_desc = {
     },
     
     -- COL_TARGET: Teleporter Target
-    [ COL_TARGET ] = { caption = { "", "[virtual-signal=goto-ring-id]" }, style = { width = 100, horizontal_align = "right" },
-        make_filter = function( parent )
+    [ COL_TARGET ] = { advanced = true, caption = { "", "[virtual-signal=goto-ring-id]" }, style = { width = 100, horizontal_align = "right" },
+        make_filter = function( parent, player )
             return parent.add{
                 type = "textfield",
                 text = "",
@@ -224,7 +232,7 @@ local teleporter_table_desc = {
     },
     
     -- COL_TIMER: Teleporter Timer
-    [ COL_TIMER ] = { caption = { "", "[virtual-signal=ring-timer]" }, style = { width = 32, horizontal_align = "center", vertical_align = "center" },
+    [ COL_TIMER ] = { advanced = true, caption = { "", "[virtual-signal=ring-timer]" }, style = { width = 32, horizontal_align = "center", vertical_align = "center" },
         make_filter = empty_element,
         update = function( player, element, data, entity, data_index, same_force, charge, diode, sprite, src_entity, src_ready )
             
@@ -247,8 +255,8 @@ local teleporter_table_desc = {
     },
     
     -- COL_SHIELD: Teleporter Shield
-    [ COL_SHIELD ] = { caption = { "", "[virtual-signal=shield-rings]" }, style = { width = 44, horizontal_align = "center", vertical_align = "center" },
-        make_filter = function( parent )
+    [ COL_SHIELD ] = { advanced = true, caption = { "", "[virtual-signal=shield-rings]" }, style = { width = 44, horizontal_align = "center", vertical_align = "center" },
+        make_filter = function( parent, player )
             local items = {}
             items[ 1 ] = { "", "[virtual-signal=signal-anything] ", { "custom.any" } }
             items[ 2 ] = { "", "[virtual-signal=shape-circle] ", { "custom.open" } }
@@ -281,8 +289,8 @@ local teleporter_table_desc = {
     },
     
     -- COL_NICKNAME: Teleporter Nickname
-    [ COL_NICKNAME ] = { caption = { "custom.nickname" }, style = { width = 300 },
-        make_filter = function( parent )
+    [ COL_NICKNAME ] = { advanced = false, caption = { "custom.nickname" }, style = { width = 300 },
+        make_filter = function( parent, player )
             return parent.add{
                 type = "textfield",
                 text = "",
@@ -327,8 +335,8 @@ local teleporter_table_desc = {
     },
     
     -- COL_FORCE: Teleporter Force (owning faction)
-    [ COL_FORCE ] = { caption = { "custom.force" }, style = { width = 100 },
-        make_filter = function( parent )
+    [ COL_FORCE ] = { advanced = true, caption = { "custom.force" }, style = { width = 100 },
+        make_filter = function( parent, player )
             local items = {}
             local count = 1
             local tags = {}
@@ -369,7 +377,7 @@ local teleporter_table_desc = {
     },
     
     -- COL_CHARGE: Teleporter Charge Level
-    [ COL_CHARGE ] = { caption = { "custom.charge-level" }, style = { width = 100 },
+    [ COL_CHARGE ] = { advanced = false, caption = { "custom.charge-level" }, style = { width = 100 },
         make_filter = empty_element,
         update = function( player, element, data, entity, data_index, same_force, charge, diode, sprite, src_entity, src_ready )
             element.value = charge
@@ -382,7 +390,7 @@ local teleporter_table_desc = {
     },
     
     -- COL_LED: Teleporter Status LED
-    [ COL_LED ] = { caption = { "custom.led" }, style = { width = 32, height = 32, horizontal_align = "center", vertical_align = "center" },
+    [ COL_LED ] = { advanced = false, caption = { "custom.led" }, style = { width = 32, height = 32, horizontal_align = "center", vertical_align = "center" },
         make_filter = empty_element,
         update = function( player, element, data, entity, data_index, same_force, charge, diode, sprite, src_entity, src_ready )
             element.sprite = sprite
@@ -397,7 +405,7 @@ local teleporter_table_desc = {
     },
     
     -- COL_USER_ACTION: Teleporter Action Button
-    [ COL_USER_ACTION ] = { caption = { "custom.action" }, style = { width = 120, horizontal_align = "center" },
+    [ COL_USER_ACTION ] = { advanced = false, caption = { "custom.action" }, style = { width = 120, horizontal_align = "center" },
         make_filter = empty_element,
         update = function( player, element, data, entity, data_index, same_force, charge, diode, sprite, src_entity, src_ready )
             
@@ -423,17 +431,44 @@ local teleporter_table_desc = {
 
 
 
+-- Check the players UI preference and return the required table mapping data
+local function GUI_get_UI_Mapping( player_index )
+    storage.ring_teleporter_UI_Advanced_Mode = storage.ring_teleporter_UI_Advanced_Mode or {}
+    local advanced = storage.ring_teleporter_UI_Advanced_Mode[ player_index ]
+    if advanced == nil then
+        advanced = false
+    end
+    
+    local mapping = {}
+    local row_length = 0
+    
+    -- Create a simple mapping table of actual column index -> table description index
+    for i = 1, COL_LAST, 1 do
+        local desc = teleporter_table_desc[ i ]
+        if not desc.advanced or advanced then
+            row_length = row_length + 1
+            mapping[ row_length ] = i
+        end
+    end
+    
+    return advanced, row_length, mapping
+end
+
+
 -- Make the entire row of teleporter column headers in the header table
-function teleporter_table_desc.make_headers( parent )
-    for index = 1, COL_LAST, 1 do
-        local header = parent.add{ type = "label", caption = teleporter_table_desc[ index ].caption }
-        header.style.width = teleporter_table_desc[ index ].style.width
+function teleporter_table_desc.make_headers( parent, advanced )
+    for i = 1, COL_LAST, 1 do
+        local desc = teleporter_table_desc[ i ]
+        if not desc.advanced or advanced then
+            local header = parent.add{ type = "label", caption = desc.caption }
+            header.style.width = desc.style.width
+        end
     end
 end
 
 
 -- Make the entire row of teleporter column filters in the header table
-teleporter_table_desc.make_filters = function( parent )
+teleporter_table_desc.make_filters = function( parent, player ) -- Don't pass advanced to filter creation, in basic UI no filter line will be present at all
     if not parent then return end
     
     -- Resulting elements
@@ -442,7 +477,7 @@ teleporter_table_desc.make_filters = function( parent )
     
     -- Make them
     for i = 1, COL_LAST, 1 do
-        local element = teleporter_table_desc[ i ].make_filter( parent )
+        local element = teleporter_table_desc[ i ].make_filter( parent, player )
         teleporter_table_desc.apply_column_style( i, element )
         elements[ i ] = element
     end
@@ -454,7 +489,7 @@ end
 
 
 -- Make the entire row of teleporter columns in the teleporter table for the given teleporter
-teleporter_table_desc.make_row = function( player, parent, data, data_index, src_entity, src_ready )
+teleporter_table_desc.make_row = function( player, parent, advanced, data, data_index, src_entity, src_ready )
     if not parent then return end
     if not data then return end
     local entity = data[ TELEPORTER_CONTROLLER ]
@@ -470,9 +505,12 @@ teleporter_table_desc.make_row = function( player, parent, data, data_index, src
     
     -- Make them
     for i = 1, COL_LAST, 1 do
-        local element = teleporter_table_desc[ i ].make( player, parent, data, entity, data_index, same_force, charge, diode, sprite, src_entity, src_ready )
-        teleporter_table_desc.apply_column_style( i, element )
-        teleporter_table_desc[ i ].update( player, element, data, entity, data_index, same_force, charge, diode, sprite, src_entity, src_ready )
+        local desc = teleporter_table_desc[ i ]
+        if not desc.advanced or advanced then
+            local element = desc.make( player, parent, data, entity, data_index, same_force, charge, diode, sprite, src_entity, src_ready )
+            teleporter_table_desc.apply_column_style( i, element )
+            desc.update( player, element, data, entity, data_index, same_force, charge, diode, sprite, src_entity, src_ready )
+        end
         elements[ i ] = element
     end
     
@@ -483,7 +521,7 @@ end
 
 
 -- Update the entire row of teleporter columns for the given teleporter
-teleporter_table_desc.update_row = function( player, elements, row_start, data, data_index, src_entity, src_ready )
+teleporter_table_desc.update_row = function( player, elements, advanced, row_length, mapping, row_start, data, data_index, src_entity, src_ready )
     if not elements then return end
     if not data then return end
     local entity = data[ TELEPORTER_CONTROLLER ]
@@ -494,25 +532,25 @@ teleporter_table_desc.update_row = function( player, elements, row_start, data, 
     local charge, diode, sprite = Teleporter.get_status( entity )
     
     -- Update them
-    for i = 0, COL_LAST - 1, 1 do
-        teleporter_table_desc[ i + 1 ].update( player, elements[ row_start + i ], data, entity, data_index, same_force, charge, diode, sprite, src_entity, src_ready )
+    for i = 1, row_length, 1 do
+        teleporter_table_desc[ mapping[ i ] ].update( player, elements[ row_start + i ], data, entity, data_index, same_force, charge, diode, sprite, src_entity, src_ready )
     end
     
 end
 
 
 -- Make this row visible
-teleporter_table_desc.show_row = function( elements, row_start )
-    if elements[ row_start ].visible then return end -- skip if already visible
-    for j = 0, COL_LAST - 1, 1 do
+teleporter_table_desc.show_row = function( elements, row_length, row_start )
+    if elements[ row_start + 1 ].visible then return end -- skip if already visible
+    for j = 1, row_length, 1 do
         elements[ row_start + j ].visible = true
     end
 end
 
 -- Make this row invisible
-teleporter_table_desc.hide_row = function( elements, row_start )
-    if not elements[ row_start ].visible then return end -- skip if already hidden
-    for j = 0, COL_LAST - 1, 1 do
+teleporter_table_desc.hide_row = function( elements, row_length, row_start )
+    if not elements[ row_start + 1 ].visible then return end -- skip if already hidden
+    for j = 1, row_length, 1 do
         elements[ row_start + j ].visible = false
     end
 end
@@ -553,6 +591,9 @@ function GUI.close_all_windows()
     end
 end
 
+
+
+
 function GUI.open_window( player, entity )
     -- Destroy existing GUI if it exists
     GUI.close_window( player )
@@ -562,6 +603,17 @@ function GUI.open_window( player, entity )
     -- Get the teleporter data for this entity
     local src_data = storage.ring_teleporter_teleporters[ entity.unit_number ]
     if src_data == nil then return end -- Failure
+    
+    
+    local advanced, row_length, mapping = GUI_get_UI_Mapping( player.index )
+    
+    
+    if advanced then
+        -- Factorio does something weird with UI scale - at 44 and 100% the icon is only shown in the expanded drop-down as an icon and with the text in a tooltip.
+        -- BUT - at 44 and 200%, the icon is clipped in the drop-down by 14 pixels and lowering it from 44 causes the right edges of the icons to be clipped when the drop-down is expanded.
+        -- Solution - Make it even WIDER at higher scales so it shows the full text for people with high resolution displays.
+        teleporter_table_desc[ COL_SHIELD ].style.width = player.display_scale > 1.0 and 128 or 44
+    end
     
     
     -- Retrieve the list of other teleporters
@@ -611,6 +663,14 @@ function GUI.open_window( player, entity )
         spacer.style.minimal_width = 24
         spacer.style.right_padding = 0
         
+        -- Add an advanced mode toggle
+        titlebar.add{
+            type = "sprite-button",
+            name = GUI_EXPAND_BUTTON,
+            sprite = advanced and "utility/collapse" or "utility/expand",
+            style = "shortcut_bar_expand_button",
+        }
+        
         -- Add the close button
         titlebar.add{
             type = "sprite-button",
@@ -632,13 +692,14 @@ function GUI.open_window( player, entity )
             direction = "vertical",
             style = "scroll_pane"
         }
+        header_pane.style.minimal_height = advanced and 128 or 80
         
         
         -- Create a table to display the teleporters with columns
         local header_table = header_pane.add{
             type = "table",
             name = GUI_HEADER_TABLE,
-            column_count = COL_LAST,
+            column_count = row_length,
             draw_horizontal_lines = true,
             draw_vertical_lines = false,
             draw_horizontal_line_after_headers = true,
@@ -647,15 +708,17 @@ function GUI.open_window( player, entity )
         
         
         -- Add table headers
-        teleporter_table_desc.make_headers( header_table )
+        teleporter_table_desc.make_headers( header_table, advanced )
         
         
         -- Add table filters
-        teleporter_table_desc.make_filters( header_table )
+        if advanced then    -- But only in advanced mode
+            teleporter_table_desc.make_filters( header_table, player )
+        end
         
         
         -- Add the source teleporter to the header table
-        teleporter_table_desc.make_row( player, header_table, src_data, SRC_TELEPORTER_DATA_INDEX, entity, src_ready )
+        teleporter_table_desc.make_row( player, header_table, advanced, src_data, SRC_TELEPORTER_DATA_INDEX, entity, src_ready )
         
         
     end
@@ -677,7 +740,7 @@ function GUI.open_window( player, entity )
         local teleporter_table = scroll_pane.add{
             type = "table",
             name = GUI_TELEPORTER_TABLE,
-            column_count = COL_LAST,
+            column_count = row_length,
             draw_horizontal_lines = true,
             draw_vertical_lines = false,
             draw_horizontal_line_after_headers = true,
@@ -686,7 +749,7 @@ function GUI.open_window( player, entity )
         
         -- Loop through the other teleporters and add rows to the table
         for index, teleporter_data in pairs( teleporters ) do
-            teleporter_table_desc.make_row( player, teleporter_table, teleporter_data, index, entity, src_ready )
+            teleporter_table_desc.make_row( player, teleporter_table, advanced, teleporter_data, index, entity, src_ready )
         end
         
     end
@@ -735,13 +798,15 @@ function GUI.update_window( frame_data )
     local teleporter_table = teleporter_pane[ GUI_TELEPORTER_TABLE ]
     
     
+    local advanced, row_length, mapping = GUI_get_UI_Mapping( player.index )
+    
     
     local src_data = frame_data.src_data
     local src_charge_level, src_diode, src_sprite = Teleporter.get_status( entity )
     local src_ready = src_diode == DIODE_GREEN
     
     local table_children = teleporter_table.children
-    local existing_rows = math.floor( #table_children / COL_LAST )
+    local existing_rows = math.floor( #table_children / row_length )
     
     -- Retrieve the list of other teleporters
     local teleporters = Teleporter.get_teleporters( entity )
@@ -752,115 +817,125 @@ function GUI.update_window( frame_data )
     
     -- Get each filter element in the header
     local header_children = header_table.children
-    local filter_pos_drop = header_children[ COL_LAST + COL_LOCATION ]          -- Column 1: Location dropdown
-    local filter_id_cell = header_children[ COL_LAST + COL_ID ]                 -- Column 2: Ring ID Textfield/Label
-    local filter_target_cell = header_children[ COL_LAST + COL_TARGET ]         -- Column 3: Target ID Textfield/Label
-    --local filter_timer_cell = header_children[ COL_LAST + COL_TIMER ]         -- Column 4: Timer Textfield/Label
-    local filter_shield_cell = header_children[ COL_LAST + COL_SHIELD ]         -- Column 5: Shield Textfield/Label
-    local filter_nickname_cell = header_children[ COL_LAST + COL_NICKNAME ]     -- Column 6: Nickname Textfield/Label
-    local filter_force_drop = header_children[ COL_LAST + COL_FORCE ]           -- Column 7: Force Name dropdown
-    --local filter_charge_bar = header_children[ COL_LAST + COL_CHARGE ]        -- Column 8: Charge Level Progress Bar
-    --local filter_led_sprite = header_children[ COL_LAST + COL_LED ]           -- Column 9: Status Sprite (LED)
-    --local filter_action_cell = header_children[ COL_LAST + COL_USER_ACTION ]   -- Column 10: Action label
+    local filter_pos_drop = advanced and header_children[ COL_LAST + COL_LOCATION ]          -- Column 1: Location dropdown
+    local filter_id_cell = advanced and header_children[ COL_LAST + COL_ID ]                 -- Column 2: Ring ID Textfield/Label
+    local filter_target_cell = advanced and header_children[ COL_LAST + COL_TARGET ]         -- Column 3: Target ID Textfield/Label
+    --local filter_timer_cell = advanced and header_children[ COL_LAST + COL_TIMER ]         -- Column 4: Timer Textfield/Label
+    local filter_shield_cell = advanced and header_children[ COL_LAST + COL_SHIELD ]         -- Column 5: Shield Textfield/Label
+    local filter_nickname_cell = advanced and header_children[ COL_LAST + COL_NICKNAME ]     -- Column 6: Nickname Textfield/Label
+    local filter_force_drop = advanced and header_children[ COL_LAST + COL_FORCE ]           -- Column 7: Force Name dropdown
+    --local filter_charge_bar = advanced and header_children[ COL_LAST + COL_CHARGE ]        -- Column 8: Charge Level Progress Bar
+    --local filter_led_sprite = advanced and header_children[ COL_LAST + COL_LED ]           -- Column 9: Status Sprite (LED)
+    --local filter_action_cell = advanced and header_children[ COL_LAST + COL_USER_ACTION ]  -- Column 10: Action label
     
     -- Get each filter value
-    local filter_surface = filter_pos_drop.tags.surfaces[ filter_pos_drop.selected_index ]
+    local filter_surface = advanced and filter_pos_drop.tags.surfaces[ filter_pos_drop.selected_index ]
     local filter_id
-    if filter_id_cell.text ~= "" then
+    if advanced and filter_id_cell.text ~= "" then
         filter_id = tonumber( filter_id_cell.text )
     end
     
     local filter_target
-    if filter_target_cell.text ~= "" then
+    if advanced and filter_target_cell.text ~= "" then
         filter_target = tonumber( filter_target_cell.text )
     end
     
     local filter_shield
-    if filter_shield_cell.selected_index == 2 then      -- Open
-        filter_shield = false
-    elseif filter_shield_cell.selected_index == 3 then  -- Protected
-        filter_shield = true
+    if advanced then
+        if filter_shield_cell.selected_index == 2 then      -- Open
+            filter_shield = false
+        elseif filter_shield_cell.selected_index == 3 then  -- Protected
+            filter_shield = true
+        end
     end
     
-    local filter_nickname = filter_nickname_cell.text
-    local filter_force = filter_force_drop.tags.forces[ filter_force_drop.selected_index ]
+    local filter_nickname = advanced and filter_nickname_cell.text
+    local filter_force = advanced and filter_force_drop.tags.forces[ filter_force_drop.selected_index ]
     
     -- Update the source teleporter in the header table
-    teleporter_table_desc.update_row( player, header_children, COL_LAST * 2 + 1, src_data, SRC_TELEPORTER_DATA_INDEX, src_data[ TELEPORTER_CONTROLLER ], src_ready )
+    do
+        local row_start = advanced and ( COL_LAST * 2 ) or row_length
+        teleporter_table_desc.update_row( player, header_children, advanced, row_length, mapping, row_start, src_data, SRC_TELEPORTER_DATA_INDEX, src_data[ TELEPORTER_CONTROLLER ], src_ready )
+    end
     
     -- Update and filter the other teleporters
     for i, teleporter_data in ipairs( teleporters ) do
         
         if i > existing_rows then
             -- Add new row for this teleporter
-            teleporter_table_desc.make_row( player, teleporter_table, teleporter_data, i, entity, src_ready )
+            teleporter_table_desc.make_row( player, teleporter_table, advanced, teleporter_data, i, entity, src_ready )
             existing_rows = existing_rows + 1
             -- Old table was invalidated by adding new rows
             table_children = teleporter_table.children
         end
         
         -- Calculate the starting index of the row
-        local row_start = ( i - 1 ) * COL_LAST
+        local row_start = ( i - 1 ) * row_length
         
         
         local teleporter_entity = teleporter_data[ TELEPORTER_CONTROLLER ]
         if not teleporter_entity or not teleporter_entity.valid then
-            teleporter_table_desc.hide_row( table_children, row_start + 1 )
+            teleporter_table_desc.hide_row( table_children, row_length, row_start )
             goto continue  -- Skip invalid entities
         end
         
         
-        local function is_accepted_by_filter()
-            -- Get each cell in the row
-            if filter_surface ~= "" then
-                local pos_btn = table_children[ row_start + COL_LOCATION ]          -- Column 1: Position Button
-                if filter_surface ~= pos_btn.tags.surface then return false end
+        if advanced then
+            
+            local function is_accepted_by_filter()
+                -- Get each cell in the row
+                if filter_surface ~= "" then
+                    local pos_btn = table_children[ row_start + COL_LOCATION ]          -- Column 1: Position Button
+                    if filter_surface ~= pos_btn.tags.surface then return false end
+                end
+                
+                if filter_id then
+                    local id_label = table_children[ row_start + COL_ID ]               -- Column 2: Ring ID Label
+                    if filter_id ~= tonumber( id_label.tags.id ) then return false end
+                end
+                
+                if filter_target then
+                    local target_label = table_children[ row_start + COL_TARGET ]      -- Column 3: Target ID Textfield/Label
+                    if filter_target ~= tonumber( target_label.tags.target ) then return false end
+                end
+                
+                --local timer_label = table_children[ row_start + COL_TIMER ]          -- Column 4: Timer Textfield/Label
+                
+                if filter_shield ~= nil then
+                    local shield_cell = table_children[ row_start + COL_SHIELD ]       -- Column 5: Shield Textfield/Label
+                    if filter_shield ~= shield_cell.tags.protected then return false end
+                end
+                
+                if filter_nickname ~= "" then
+                    local nickname_cell = table_children[ row_start + COL_NICKNAME ]    -- Column 6: Nickname Textfield/Label
+                    if string.find( nickname_cell.text, filter_nickname, 1, true ) == nil then return false end -- Plain string matching from the begining - plain matching must be specified so it doesn't try to regex icons
+                end
+                
+                if filter_force ~= "" then
+                    local force_label = table_children[ row_start + COL_FORCE ]         -- Column 7: Force Name Label
+                    if filter_force ~= force_label.caption then return false end
+                end
+                
+                --local charge_bar = table_children[ row_start + COL_CHARGE ]           -- Column 8: Charge Level Progress Bar
+                --local led_sprite = table_children[ row_start + COL_LED ]              -- Column 9: Status Sprite (LED)
+                --local teleport_btn = table_children[ row_start +  COL_USER_ACTION ]   -- Column 10: Teleport Button
+                
+                return true
             end
             
-            if filter_id then
-                local id_label = table_children[ row_start + COL_ID ]               -- Column 2: Ring ID Label
-                if filter_id ~= tonumber( id_label.tags.id ) then return false end
+            if is_accepted_by_filter() then
+                teleporter_table_desc.show_row( table_children, row_length, row_start )
+            else
+                teleporter_table_desc.hide_row( table_children, row_length, row_start )
+                -- Skip further updates for it
+                goto continue
             end
             
-            if filter_target then
-                local target_label = table_children[ row_start + COL_TARGET ]      -- Column 3: Target ID Textfield/Label
-                if filter_target ~= tonumber( target_label.tags.target ) then return false end
-            end
-            
-            --local timer_label = table_children[ row_start + COL_TIMER ]          -- Column 4: Timer Textfield/Label
-            
-            if filter_shield ~= nil then
-                local shield_cell = table_children[ row_start + COL_SHIELD ]       -- Column 5: Shield Textfield/Label
-                if filter_shield ~= shield_cell.tags.protected then return false end
-            end
-            
-            if filter_nickname ~= "" then
-                local nickname_cell = table_children[ row_start + COL_NICKNAME ]    -- Column 6: Nickname Textfield/Label
-                if string.find( nickname_cell.text, filter_nickname, 1, true ) == nil then return false end -- Plain string matching from the begining - plain matching must be specified so it doesn't try to regex icons
-            end
-            
-            if filter_force ~= "" then
-                local force_label = table_children[ row_start + COL_FORCE ]         -- Column 7: Force Name Label
-                if filter_force ~= force_label.caption then return false end
-            end
-            
-            --local charge_bar = table_children[ row_start + COL_CHARGE ]           -- Column 8: Charge Level Progress Bar
-            --local led_sprite = table_children[ row_start + COL_LED ]              -- Column 9: Status Sprite (LED)
-            --local teleport_btn = table_children[ row_start +  COL_USER_ACTION ]   -- Column 10: Teleport Button
-            
-            return true
         end
         
-        if is_accepted_by_filter() then
-            teleporter_table_desc.show_row( table_children, row_start + 1 )
-        else
-            teleporter_table_desc.hide_row( table_children, row_start + 1 )
-            -- Skip further updates for it
-            goto continue
-        end
         
         -- Update the elements
-        teleporter_table_desc.update_row( player, table_children, row_start + 1, teleporter_data, i, entity, src_ready )
+        teleporter_table_desc.update_row( player, table_children, advanced, row_length, mapping, row_start, teleporter_data, i, entity, src_ready )
         
         
         ::continue::
@@ -870,8 +945,8 @@ function GUI.update_window( frame_data )
     -- Disable rows on a shrinking list
     if nr_teleporters < existing_rows then
         for i = nr_teleporters + 1, existing_rows, 1 do
-            local row_start = ( i - 1 ) * COL_LAST
-            teleporter_table_desc.hide_row( table_children, row_start + 1 )
+            local row_start = ( i - 1 ) * row_length
+            teleporter_table_desc.hide_row( table_children, row_length, row_start )
         end
     end
     
@@ -917,7 +992,28 @@ end
 local function on_gui_click( event )
     local element = event.element
     if not element.valid then return end
-    local player = game.players[ event.player_index ]
+    
+    local player_index = event.player_index
+    local player = game.players[ player_index ]
+    
+    -- Handle window expansion
+    if element.name == GUI_EXPAND_BUTTON then
+        
+        -- Get the entity from the current window
+        local gui = storage.ring_teleporter_GUIs[ player_index ]
+        local entity = gui.entity
+        
+        -- Close the current window
+        GUI.close_window( player )
+        
+        -- Toggle the window mode
+        storage.ring_teleporter_UI_Advanced_Mode[ player_index ] = not storage.ring_teleporter_UI_Advanced_Mode[ player_index ]
+        
+        -- Schedule the window to reopen on the next tick
+        Util.schedule_after( 1, GUI_OPEN_WINDOW, { player, entity } )
+        
+        return
+    end
     
     -- Handle close button
     if element.name == GUI_CLOSE_BUTTON then
@@ -1007,7 +1103,14 @@ end
 
 function GUI.init()
     storage.ring_teleporter_GUIs = {}
+    storage.ring_teleporter_UI_Advanced_Mode = {}
 end
 
+
+-- Map functions that can be scheduled.
+
+Util.map_functions{
+    [ GUI_OPEN_WINDOW ]       = GUI.open_window,
+}
 
 return GUI

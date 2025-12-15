@@ -82,9 +82,9 @@ local TELEPORTER_OUTPUT_PORT            = "output_port"
 local TELEPORTER_SPRITE_NAME            = "sprite_name"
 
 local Teleporter_component_entity_names = {
-    [ TELEPORTER_CONTROLLER ]           = { make = true, name = TELEPORTER_CONTROLLER_MK1 , offset = { x =  0.0  , y =  0.0         }, protected = false, can_be_orphaned = false },
-    [ TELEPORTER_SPRITE_NAME ]          = { make = true, name = TELEPORTER_SPRITE_NAME_MK1, offset = { x =  0.0  , y =  0.0         }, protected = true , can_be_orphaned = true  },
-    [ TELEPORTER_OUTPUT_PORT ]          = { make = true, name = TELEPORTER_OUTPUT_PORT_MK1, offset = { x = -0.125, y = -0.125 + 1.5 }, protected = true , can_be_orphaned = true  },
+    [ TELEPORTER_CONTROLLER ]           = { make = true, name = TELEPORTER_CONTROLLER_MK1 , offset = { x =  0.0  , y =  0.0         }, protected = false, can_be_orphaned = false, has_quality = true  },
+    [ TELEPORTER_SPRITE_NAME ]          = { make = true, name = TELEPORTER_SPRITE_NAME_MK1, offset = { x =  0.0  , y =  0.0         }, protected = true , can_be_orphaned = true , has_quality = false },
+    [ TELEPORTER_OUTPUT_PORT ]          = { make = true, name = TELEPORTER_OUTPUT_PORT_MK1, offset = { x = -0.125, y = -0.125 + 1.5 }, protected = true , can_be_orphaned = true , has_quality = false },
 }
 
 
@@ -107,7 +107,7 @@ local NEAR_FUTURE_TICKS                 = 1
 
 
 -- -------------------------------------------------------------------------------- --
--- New Animation method data that isn't frame-synced (hopefully)
+-- New Animation method data that isn't frame-synced
 
 local ANIMATION_FRAME_COUNT             = 200
 local ANIMATION_SPEED                   = 0.6666667
@@ -158,9 +158,8 @@ local OCCUPIED_INCOMING                 = -1
 
 local Teleporter_protected_entity_names = {
     [ TELEPORTER_CONTROLLER_MK1 ]       = true,
-    [ TELEPORTER_SPRITE_MK1_OBSOLETE ]  = true,
-    [ TELEPORTER_BACK_MK1_OBSOLETE ]    = true,
-    [ TELEPORTER_FRONT_MK1_OBSOLETE ]   = true,
+    [ TELEPORTER_SPRITE_NAME_MK1 ]      = true,
+    [ TELEPORTER_OUTPUT_PORT_MK1 ]      = true,
     [ TELEPORTER_BARRIER ]              = true,
 }
 
@@ -1131,6 +1130,7 @@ function Teleporter.new( entity )
     local pos = entity.position
     local force = entity.force
     local poskey = Util_poskey( entity )
+    local quality = entity.quality or "normal"
     
     
     -- Destroy the placer entity
@@ -1165,7 +1165,7 @@ function Teleporter.new( entity )
     
     
     -- Find or create a specific entity
-    local function find_or_create( position, name, offset )
+    local function find_or_create( position, name, offset, has_quality )
         local x, y = position.x + offset.x, position.y + offset.y
         local area = { { x - SCAN_AREA, y - SCAN_AREA }, { x + SCAN_AREA, y + SCAN_AREA } }
         
@@ -1209,6 +1209,7 @@ function Teleporter.new( entity )
                 force = force,
                 raise_built = false,
                 create_build_effect_smoke = false,
+                quality = has_quality and quality or "normal",
             }
             --log( "\tcreated entity: " .. name .. " " .. result.name )
         end
@@ -1221,7 +1222,7 @@ function Teleporter.new( entity )
     for id, component in pairs( Teleporter_component_entity_names )do
         if component.make then
             --log( "find_or_create() " .. id .. " " .. component.name )
-            local cd = find_or_create( pos, component.name, component.offset )
+            local cd = find_or_create( pos, component.name, component.offset, component.has_quality )
             if component.protected then
                 cd.destructible = false
                 cd.minable = false
@@ -1486,41 +1487,40 @@ local function on_player_setup_blueprint( event )
     end
     
     local bp_ents = blueprint.get_blueprint_entities()
-	
-	if bp_ents == nil then return end -- Tiles only causes nil
-	
     local src_ents = event.mapping.get()
     
     local modified = false
     
-    for i, bp_ent in ipairs( bp_ents ) do
-        
-        local src_ent = src_ents[ i ]
-        
-        -- Fix name parameter
-        if bp_ent.name == TELEPORTER_SPRITE_NAME_MK1 then
+    if bp_ents and src_ents then
+        for i, bp_ent in ipairs( bp_ents ) do
             
-            local data = Teleporter_find_by_entity( src_ent, TELEPORTER_SPRITE_NAME )
+            local src_ent = src_ents[ i ]
             
-            if data then
-                local nickname = Teleporter_get_nickname( data.poskey )
-                --log( "on_player_setup_blueprint() - recording nickname as '" .. nickname .. "'" )
-                bp_ent.station = nickname
-                modified = true
+            -- Fix name parameter
+            if bp_ent.name == TELEPORTER_SPRITE_NAME_MK1 then
+                
+                local data = Teleporter_find_by_entity( src_ent, TELEPORTER_SPRITE_NAME )
+                
+                if data then
+                    local nickname = Teleporter_get_nickname( data.poskey )
+                    --log( "on_player_setup_blueprint() - recording nickname as '" .. nickname .. "'" )
+                    bp_ent.station = nickname
+                    modified = true
+                end
+                
+            end
+            
+            -- Clear output port circuit signals (invalid in a blueprint)
+            if bp_ent.name == TELEPORTER_OUTPUT_PORT_MK1 then
+                
+                if bp_ent.control_behavior then
+                    bp_ent.control_behavior.sections = nil
+                    modified = true
+                end
+                
             end
             
         end
-        
-        -- Clear output port circuit signals (invalid in a blueprint)
-        if bp_ent.name == TELEPORTER_OUTPUT_PORT_MK1 then
-            
-            if bp_ent.control_behavior then
-                bp_ent.control_behavior.sections = nil
-                modified = true
-            end
-            
-        end
-        
     end
     
     if modified then
@@ -1551,6 +1551,7 @@ local function on_built( event )
                 force = entity.force,
                 ghost = true,
                 create_build_effect_smoke = true,
+                quality = entity.quality,
             }
             
         end
