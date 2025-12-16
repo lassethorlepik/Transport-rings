@@ -66,7 +66,7 @@ script.on_event( defines.events.on_selected_entity_changed, function( event )
     
     Selected_Teleporter_Data = nil  -- Stop updating
     
-    if entity and not entity.name == ENTITY_GHOST then
+    if entity and entity.name ~= ENTITY_GHOST then
         local data = Teleporter.find_by_entity( entity )
         if data then
             Selected_Teleporter_Data = data -- Begin updating
@@ -104,7 +104,7 @@ script.on_event( defines.events.on_tick, function( event )
     
     -- Teleporter custom status
     if ( tick % INTERVAL_CUSTOM_STATUS ) == 0 and Selected_Teleporter_Data then
-        Util_interleave_function( Selected_Teleporter_Data )
+        Teleporter_update_custom_status( Selected_Teleporter_Data )
     end
     
     
