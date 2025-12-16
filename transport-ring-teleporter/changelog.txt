@@ -1,5 +1,5 @@
 ---------------------------------------------------------------------------------------------------
-Version: 0.4.4 WIP
+Version: 0.4.4
 Date: 16.12.2025
   Features:
     - Picker Dollies support (teleporters and all of it's components are blacklisted).
