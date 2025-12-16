@@ -22,8 +22,14 @@ end
 
 
 script.on_init( function()
-    GUI.init()
     Teleporter.init()
+    GUI.init()
+end )
+
+
+script.on_load( function()
+    Teleporter.load()
+    GUI.load()
 end )
 
 
@@ -43,6 +49,10 @@ end )
 local Teleporter_update_teleporter = Teleporter.update_teleporter
 local GUI_update_window = GUI.update_window
 local Teleporter_update_custom_status = Teleporter.update_custom_status
+local Util_process_scheduled_functions = Util.process_scheduled_functions
+local Util_interleave_function = Util.interleave_function
+
+local ENTITY_GHOST = "entity-ghost"
 
 
 
@@ -56,7 +66,7 @@ script.on_event( defines.events.on_selected_entity_changed, function( event )
     
     Selected_Teleporter_Data = nil  -- Stop updating
     
-    if entity then
+    if entity and not entity.name == ENTITY_GHOST then
         local data = Teleporter.find_by_entity( entity )
         if data then
             Selected_Teleporter_Data = data -- Begin updating
@@ -83,24 +93,24 @@ script.on_event( defines.events.on_tick, function( event )
     
     
     -- Scheduled functions
-    Util.process_scheduled_functions( tick )
+    Util_process_scheduled_functions( tick )
     
     
     -- Teleporter logic
     for _, data in pairs( storage.ring_teleporter_teleporters ) do
-        Util.interleave_function( INTERVAL_LOGIC, tick, data.unit_number, Teleporter_update_teleporter, data )
+        Util_interleave_function( INTERVAL_LOGIC, tick, data.unit_number, Teleporter_update_teleporter, data )
     end
     
     
     -- Teleporter custom status
     if ( tick % INTERVAL_CUSTOM_STATUS ) == 0 and Selected_Teleporter_Data then
-        Teleporter_update_custom_status( Selected_Teleporter_Data )
+        Util_interleave_function( Selected_Teleporter_Data )
     end
     
     
     -- GUI updates
     for _, data in pairs( storage.ring_teleporter_GUIs ) do
-        Util.interleave_function( INTERVAL_GUI, tick, data.player_index, GUI_update_window, data )
+        Util_interleave_function( INTERVAL_GUI, tick, data.player_index, GUI_update_window, data )
     end
     
 end )

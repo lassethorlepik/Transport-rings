@@ -1,4 +1,19 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.4.4 WIP
+Date: 16.12.2025
+  Features:
+    - Picker Dollies support (teleporters and all of it's components are blacklisted).
+    - Teleporters now default to building on the 2x2 rail grid for easier train alignment.  Can be turned off in the start up settings.  Turning this off does not effect the blueprint restriction, it just makes it so you otherwise cannot build teleporters off the rail grid.
+    - Teleporters will now pipette properly, the output port does NOT to avoid blueprint confusion and extra items being brought to the wrong entity.
+    - More micro-optimizations to claw back UPS in megabases with hundreds of teleporters.
+  Bugfixes:
+    - Crash when mouse-over an existing teleporter with a teleporter ghost in hand.
+    - Placement collision between teleporters is fixed, now you cannot place a teleporter that would overlap another one; any attempt will fail and the item will be refunded to the player or spilled on the ground (robot/script placement).
+    - Fixed up event filters to only trigger on the intended entities.
+    - Some items that shouldn't show up in menus and items that should that didn't.
+    - Blueprint teleporter output port now has an icon.
+    - Blueprint teleporter name parameter now has an icon.
+---------------------------------------------------------------------------------------------------
 Version: 0.4.3
 Date: 16.12.2025
   Features:

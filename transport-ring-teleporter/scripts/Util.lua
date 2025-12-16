@@ -1,15 +1,16 @@
 local Util = {}
 
+local Util_function_map = {}
+
+
 -- Maps a function id to it's function for scheduled function calls
 function Util.map_function( func_id, func )
-    Util.function_map = Util.function_map or {}
-    Util.function_map[ func_id ] = func
+    Util_function_map[ func_id ] = func
 end
 
 function Util.map_functions( function_map )
-    Util.function_map = Util.function_map or {}
     for func_id, func in pairs( function_map )do
-        Util.function_map[ func_id ] = func
+        Util_function_map[ func_id ] = func
     end
 end
 
@@ -83,8 +84,7 @@ end
 
 -- Execute a function based on id
 function Util.Execute( func_id, params )
-    Util.function_map = Util.function_map or {}
-    local func = Util.function_map[ func_id ]
+    local func = Util_function_map[ func_id ]
     if not func then
         --log( "Attempted to execute an unmapped function: " .. func_id )
         return

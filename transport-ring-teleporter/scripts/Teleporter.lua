@@ -35,6 +35,7 @@ local table_insert                      = table.insert
 -- Names of Teleporter related prototypes
 
 local TELEPORTER_PLACER_MK1             = "ring-teleporter-placer"
+local TELEPORTER_PLACER_ITEM_MK1        = "ring-teleporter"
 
 local TELEPORTER_CONTROLLER_MK1         = "ring-teleporter"
 local TELEPORTER_SPRITE_NAME_MK1        = "ring-teleporter-map-nickname"
@@ -1118,6 +1119,7 @@ end
 
 function Teleporter.new( entity )
     --log( "Teleporter.new() : " .. tostring( entity.valid ) .. " " .. entity.name .. " " .. Teleporter.get_nickname( entity ) )
+    --log( "Teleporter.new() : " .. entity.name .. " " .. ( ( entity.name == ENTITY_GHOST ) and entity.ghost_name or "" ) )
     
     if not ( entity and entity.valid ) then return nil end
     local e_name = entity.name
@@ -1135,7 +1137,6 @@ function Teleporter.new( entity )
     
     -- Destroy the placer entity
     if e_name == TELEPORTER_PLACER_MK1 then
-        -- by this time, the base ghost has been destroyed due to collision - how to fix?
         entity.destroy()
     end
     
@@ -1275,8 +1276,9 @@ end
 
 function Teleporter.remove( entity, scrub_name )
     if not ( entity and entity.valid ) then return end
-    if not ( ( entity.name == ENTITY_GHOST and entity.ghost_name == TELEPORTER_CONTROLLER_MK1 )
-    or ( entity.name == TELEPORTER_CONTROLLER_MK1 ) ) then return end
+    --log( "Teleporter.remove() : " .. entity.name .. " " .. ( ( entity.name == ENTITY_GHOST ) and entity.ghost_name or "" ) )
+    
+    if not( entity.name == TELEPORTER_CONTROLLER_MK1 ) then return end
     
     local unit_number = entity.unit_number
     local poskey = Util_poskey( entity )
@@ -1468,12 +1470,15 @@ end
 -- Event handling
 
 
--- Don't listen for everything that is built
+-- Don't listen for everything
 local build_event_filter = {
-    { filter = "name", name = TELEPORTER_CONTROLLER_MK1 },
     { filter = "name", name = TELEPORTER_PLACER_MK1 },
-    { filter = "name", name = TELEPORTER_SPRITE_NAME },
-    { filter = "name", name = ENTITY_GHOST },
+    { filter = "ghost_name", name = TELEPORTER_PLACER_MK1 },
+    { filter = "ghost_name", name = TELEPORTER_CONTROLLER_MK1 },
+    { filter = "ghost_name", name = TELEPORTER_SPRITE_NAME_MK1 },
+}
+local remove_event_filter = {
+    { filter = "name", name = TELEPORTER_CONTROLLER_MK1 },
 }
 
 
@@ -1532,17 +1537,96 @@ end
 -- Something placed a teleporter controller or the placer entity
 local function on_built( event )
     local entity = event.entity
-    --local s = entity.name
-    --if s == ENTITY_GHOST then
-    --    s = s .. " " .. entity.ghost_name
-    --end
-    --log( "on_built() : " .. s )
+    local e_name = entity.name
+    local player_index = event.player_index
+    local player = player_index and game.players[ player_index ]
+    --log( "on_built() : " .. entity.name .. " " .. ( ( entity.name == ENTITY_GHOST ) and entity.ghost_name or "" ) )
+    
+    
+    -- Look for another teleporter that would overlap
+    local function check_overlap( entity )
+        local unit_number = entity.unit_number
+        local x, y = entity.position.x, entity.position.y
+        local area = { { x - 9.0, y - 6.0 }, { x + 9.0, y + 7.0 } }     -- Our entire area plus any area of another teleporter to the right and/or below this one
+        
+        local function found_it( name, ghost_name )
+            local entities = entity.surface.find_entities_filtered{
+                name = name,
+                ghost_name = ghost_name,
+                area = area
+            }
+            if not ( entities and #entities > 0 ) then
+                return false
+            end
+            for _, e in pairs( entities ) do
+                if e.unit_number ~= unit_number then    -- Don't detect as colliding with itself
+                    --log( "unit: " .. tostring( unit_number ) .." collided with: " ..tostring( e.unit_number ) .. " " .. name .. " " .. ( ghost_name and ghost_name or "" ) )
+                    return true
+                end
+            end
+            return false
+        end
+        
+        return found_it( TELEPORTER_CONTROLLER_MK1 )                    -- Overlap with a placed controller
+            or found_it( TELEPORTER_PLACER_MK1 )                        -- And a placed placer (should never happen)
+            or found_it( ENTITY_GHOST, TELEPORTER_PLACER_MK1 )          -- Or a ghost placer
+            --or found_it( ENTITY_GHOST, TELEPORTER_CONTROLLER_MK1 )    -- But not a ghost controller
+    end
+    
+    
+    -- Look for component ghosts where this [ghost] entity was placed and remove them
+    local function clean_mess_near( entity )
+        local find_entities_filtered = entity.surface.find_entities_filtered
+        local pos = entity.position
+        
+        -- Remove component ghosts
+        for id, component in pairs( Teleporter_component_entity_names ) do
+            local offset = component.offset
+            
+            local x, y = pos.x + offset.x, pos.y + offset.y
+            local area = { { x - SCAN_AREA, y - SCAN_AREA }, { x + SCAN_AREA, y + SCAN_AREA } }
+            
+            local entities = find_entities_filtered{
+                name = ENTITY_GHOST,
+                ghost_name = component.name,
+                area = area
+            } or {}
+            
+            for _, e in pairs( entities ) do
+                e.destroy()
+            end
+            
+        end
+        
+        -- And destroy the bad entity itself
+        entity.destroy()
+    end
+    
     
     if entity.name == ENTITY_GHOST then
         
-        -- Spawn a placer ghost so robots can deliver the teleporter
-        if entity.ghost_name == TELEPORTER_CONTROLLER_MK1 then
+        
+        if entity.ghost_name == TELEPORTER_PLACER_MK1 then
             
+            -- Check if this placer would collide with another teleporter
+            if check_overlap( entity ) then
+                entity.destroy()   -- Just destroy this one, the other one was here first
+            end
+            
+            return
+        end
+        
+        
+        if entity.ghost_name == TELEPORTER_CONTROLLER_MK1 then
+            -- This case will only happen via blueprints
+            
+            -- Check if this controller would collide with another teleporter
+            if check_overlap( entity ) then
+                clean_mess_near( entity )   -- Can only be placed by blueprint, meaning the rest of the components are misplaced too
+                return
+            end
+            
+            -- Spawn a placer ghost so robots can deliver the teleporter
             local placer = entity.surface.create_entity{
                 name = ENTITY_GHOST,
                 ghost_name = TELEPORTER_PLACER_MK1,
@@ -1554,7 +1638,9 @@ local function on_built( event )
                 quality = entity.quality,
             }
             
+            return
         end
+        
         
         -- Read the nickname from a blueprinted teleporter
         if entity.ghost_name == TELEPORTER_SPRITE_NAME_MK1 then
@@ -1564,11 +1650,47 @@ local function on_built( event )
             --log( "on_built() - setting nickname at " .. poskey .. " to '" .. nickname .. "'" )
             storage.ring_teleporter_nicknames[ poskey ] = nickname
             
+            return
         end
         
-    else
+        
+    elseif e_name == TELEPORTER_PLACER_MK1 then
+        
+        if check_overlap( entity ) then
+            
+            -- Return item stack
+            local stack = {
+                name = TELEPORTER_PLACER_ITEM_MK1,
+                count = 1,
+                quality = entity.quality,
+            }
+            
+            local spill = true  -- Default for robots, player will be given back directly (unless inventory is full)
+            
+            if player then -- Give it right back to the player that built it
+                local remainder = stack.count - player.insert( stack )
+                spill = remainder > 0 -- No room?  Fast logistics!  Spill it on the floor then.
+                stack.count = remainder
+            end
+            
+            if spill then -- Spawn the [remaining] item[s] on the ground
+                local item = entity.surface.spill_item_stack{
+                    position = entity.position,
+                    stack = stack,
+                    enable_looted = true,
+                }
+                item.to_be_looted = true
+            end
+            
+            clean_mess_near( entity )   -- Would overlap with an existing teleporter/ghost
+            
+            return
+        end
+        
+        
         -- Try create the teleporter
         Teleporter.new( event.entity )
+        
     end
 end
 
@@ -1600,10 +1722,32 @@ local function on_entity_settings_pasted( event )
 end
 
 
+-- Picker Dollies support (blacklist)
+local function init_PickerDollies()
+    if remote.interfaces[ "PickerDollies" ] and remote.interfaces[ "PickerDollies" ][ "add_blacklist_name" ] then
+        
+        local function blacklist( name )
+            remote.call( "PickerDollies", "add_blacklist_name", name )
+        end
+        
+        -- No way to signal to Picker Dollies "not right now" and it provides no public API to
+        -- make use of it's functions to do the work of moving all the component entities,
+        -- So instead we'll just blacklist everything from being moved.
+        blacklist( TELEPORTER_PLACER_MK1 )
+        blacklist( TELEPORTER_CONTROLLER_MK1 )
+        blacklist( TELEPORTER_SPRITE_NAME_MK1 )
+        blacklist( TELEPORTER_OUTPUT_PORT_MK1 )
+        blacklist( TELEPORTER_BARRIER )
+        
+    end
+    
+end
+
+
 
 
 -- -------------------------------------------------------------------------------- --
--- Setup the event handling and other low-level requirements prior to init()
+-- Setup the event handling and other low-level requirements prior to init() and load()
 
 function Teleporter.bootstrap()
     
@@ -1617,10 +1761,10 @@ function Teleporter.bootstrap()
     script.on_event( defines.events.on_space_platform_built_entity, on_built, build_event_filter )
     
     -- Entity Removed
-    script.on_event( defines.events.on_player_mined_entity, on_entity_removed_clean, build_event_filter )
-    script.on_event( defines.events.on_robot_mined_entity, on_entity_removed_clean, build_event_filter )
-    script.on_event( defines.events.on_space_platform_pre_mined, on_entity_removed_clean, build_event_filter )
-    script.on_event( defines.events.on_entity_died, on_entity_removed_dirty, build_event_filter )
+    script.on_event( defines.events.on_player_mined_entity, on_entity_removed_clean, remove_event_filter )
+    script.on_event( defines.events.on_robot_mined_entity, on_entity_removed_clean, remove_event_filter )
+    script.on_event( defines.events.on_space_platform_pre_mined, on_entity_removed_clean, remove_event_filter )
+    script.on_event( defines.events.on_entity_died, on_entity_removed_dirty, remove_event_filter )
     
     -- Entity settings copy-paste
     script.on_event( defines.events.on_entity_settings_pasted, on_entity_settings_pasted )
@@ -1641,6 +1785,18 @@ function Teleporter.init()
     --storage.ring_teleporter_barriers          = {}    -- Obsolete
     
     storage.power_per_teleport                  = Util.power_per_teleport()
+    
+    init_PickerDollies()
+end
+
+
+
+
+-- -------------------------------------------------------------------------------- --
+-- Load event
+
+function Teleporter.load()
+    init_PickerDollies()
 end
 
 

@@ -25,5 +25,12 @@ data:extend({
         minimum_value = 0,
         maximum_value = 10000,
         order = "c"
+    },
+    {
+        type = "bool-setting",
+        name = "trt-align-to-rail-grid",
+        setting_type = "startup",
+        default_value = true,
+        order = "d"
     }
 })
