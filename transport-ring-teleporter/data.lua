@@ -1,5 +1,7 @@
 local Util = require( "scripts/Util" )
 
+local grid_alignment = settings.startup[ "trt-align-to-rail-grid" ].value and 2 or 1
+
 local mk1_wire = {
     wire = {
         red = {-0.48, 0.05},
@@ -73,7 +75,7 @@ local placement_collision_mask = {
         is_lower_object=true,
         teleporter_ring=true,
     },
-    not_colliding_with_itself=true,
+    not_colliding_with_itself=true,     -- Stops placement object from breaking blueprint wires, but comes with the drawback of teleporter overlap when it shouldn't be allowed - We'll hand that issue in code when an item is built.
 }
 
 
@@ -101,6 +103,7 @@ data:extend({
         animations = { layers = { proxy_anim } },
         order = "z[ring-teleporter]",
         subgroup = "transport",
+        build_grid_size = grid_alignment,
         energy_source = {
             type = "electric",
             usage_priority = "secondary-input",
@@ -109,8 +112,11 @@ data:extend({
             output_flow_limit = "0W"
         },
         localised_description = {"entity-description.ring-teleporter", Util.format_power_string( Util.power_per_teleport(), "J", " ")},
-        hidden=true,
-        hidden_in_factoriopedia=true,
+        factoriopedia_simulation = {
+            init = "game.simulation.camera_position = {0, 0}\ngame.surfaces[1].create_entity{name = \"ring-teleporter-back\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.surfaces[1].create_entity{name = \"ring-teleporter-front\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.simulation.camera_zoom = 0.8"
+        },
+        --hidden=true,
+        --hidden_in_factoriopedia=true,
     },
     {   -- Mk1 Placer item
         type = "item",
@@ -121,8 +127,8 @@ data:extend({
         place_result = "ring-teleporter-placer",
         stack_size = 1,
         subgroup = "transport",
-        hidden=true,
-        hidden_in_factoriopedia=true,
+        --hidden = true,
+        --hidden_in_factoriopedia = true,
     },
 
     {   -- Mk1 Controller entity
@@ -135,6 +141,8 @@ data:extend({
         icon = "__transport-ring-teleporter__/graphics/icons/ring-teleporter.png",
         icon_size = 256,
         minable = {mining_time = 3, result = "ring-teleporter"},
+        placeable_by = { { item = "ring-teleporter", count = 1 } },
+        build_grid_size = grid_alignment,
         remove_decoratives = "true",
         max_health = 5000,
         corpse = "medium-remnants",
@@ -149,12 +157,12 @@ data:extend({
         circuit_connector = { points = mk1_wire },
         circuit_wire_max_distance = 20,
         alert_icon_shift = {0.125, 0.5},
-        factoriopedia_simulation = {
-            init = "game.simulation.camera_position = {0, 0}\ngame.surfaces[1].create_entity{name = \"ring-teleporter-back\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.surfaces[1].create_entity{name = \"ring-teleporter-front\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.simulation.camera_zoom = 0.8"
-        },
+        --factoriopedia_simulation = {
+        --    init = "game.simulation.camera_position = {0, 0}\ngame.surfaces[1].create_entity{name = \"ring-teleporter-back\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.surfaces[1].create_entity{name = \"ring-teleporter-front\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.simulation.camera_zoom = 0.8"
+        --},
         localised_description = {"entity-description.ring-teleporter", Util.format_power_string( Util.power_per_teleport(), "J", " ")},
-        --hidden_in_factoriopedia = true,
-        --hidden = true,
+        hidden_in_factoriopedia = true,
+        hidden = true,
     },
     {   -- Mk1 Controller blueprint item
         type = "item",
@@ -164,8 +172,8 @@ data:extend({
         order = "z2[ring-teleporter]",
         place_result = "ring-teleporter",
         stack_size = 1,
-        hidden=true,
-        hidden_in_factoriopedia=true,
+        hidden = true,
+        hidden_in_factoriopedia = true,
         subgroup = "transport"
     },
 
@@ -304,6 +312,7 @@ data:extend({
             layers = {}
         },
         hidden = true,
+        hidden_in_factoriopedia = true,
         animations = mk1_sprite,
     },
 
@@ -313,11 +322,14 @@ data:extend({
         flags = { "placeable-off-grid", "placeable-neutral", "player-creation", "hide-alt-info", "not-deconstructable", "not-rotatable", "not-flammable", "no-copy-paste" },
         collision_mask = { layers = {} },
         selectable_in_game = false,
-        icon = invisible_icon,
-        icon_size = invisible_icon_size,
+        --icon = invisible_icon,
+        --icon_size = invisible_icon_size,
+        icon = "__transport-ring-teleporter__/graphics/icons/ring-teleporter.png",
+        icon_size = 256,
         minable = {mining_time = 3, result = "ring-teleporter-map-nickname"},
+        --placeable_by = { { item = "ring-teleporter", count = 1 } }, -- No collision or selection box so the only way to isolate and remove this from a blueprint is it's own item
         max_health = 10,
-        build_grid_size = 1,
+        build_grid_size = grid_alignment,
         animation_ticks_per_frame=20,
         integration_patch_render_layer = "lower-object-overlay",
         integration_patch = {
@@ -328,6 +340,7 @@ data:extend({
         },
         --circuit_wire_connection_points = { mk1_wire, mk1_wire, mk1_wire, mk1_wire },
         --circuit_wire_max_distance = 20,
+        hidden = true,
         hidden_in_factoriopedia = true,
         friendly_map_color = { 0.25, 0.5, 1.0 },
         enemy_map_color = { 1.0, 0.5, 0.25 },
@@ -354,25 +367,33 @@ data:extend({
         collision_mask = {layers={}},
         selection_box = { { -0.25, -0.25 }, { 0.25, 0.25 } },
         selection_priority = 70,
+        --placeable_by = { { item = "ring-teleporter", count = 1 } }, -- Nice for pipetting but causes confusion with blueprints
         minable = nil,
         maximum_wire_distance = 9,
         max_health = 10,
-        icon_size = 16,
-        icon = "__base__/graphics/icons/shapes/shape-circle.png",
+        --icon_size = 16,
+        --icon = "__base__/graphics/icons/shapes/shape-circle.png",
+        icon = "__transport-ring-teleporter__/graphics/icons/ring-teleporter.png",
+        icon_size = 256,
         flags = { "placeable-off-grid", "placeable-neutral", "player-creation", "hide-alt-info", "not-on-map", "not-deconstructable", "not-rotatable", "not-flammable", "no-copy-paste" },
         circuit_wire_max_distance = 9,
         sprites = invisible_sprite, -- TODO:  Replace with proper sprite that will sit on the controller
         activity_led_sprites = invisible_sprite,
         activity_led_light_offsets = { { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
         circuit_wire_connection_points = { output_port_wire, output_port_wire, output_port_wire, output_port_wire },
-        item_slot_count = 1
+        item_slot_count = 1,
+        hidden=true,
+        hidden_in_factoriopedia = true,
     },
     {   -- Output port item (for blueprinting)
         type = "item",
         name = "ring-teleporter-output",
+        hidden=true,
         hidden_in_factoriopedia = true,
-        icon_size = invisible_icon_size,
-        icon = invisible_icon,
+        --icon_size = invisible_icon_size,
+        --icon = invisible_icon,
+        icon = "__transport-ring-teleporter__/graphics/icons/ring-teleporter.png",
+        icon_size = 256,
         subgroup = "circuit-network",
         order = "zzz",
         place_result = "ring-teleporter-output",
@@ -450,6 +471,7 @@ data:extend({
             layers = {}
         },
         hidden = true,
+        hidden_in_factoriopedia=true,
         animations = {
             layers = {
                 {
@@ -485,6 +507,7 @@ data:extend({
             layers = {}
         },
         hidden = true,
+        hidden_in_factoriopedia=true,
         animations = {
             layers = {
                 {
@@ -526,7 +549,8 @@ data:extend({
             layers = {object = true, player = true},
             not_colliding_with_itself = true
         },
-        hidden = true
+        hidden = true,
+        hidden_in_factoriopedia=true,
     },
 
 

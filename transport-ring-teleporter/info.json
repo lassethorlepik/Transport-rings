@@ -1,6 +1,6 @@
 {
     "name": "transport-ring-teleporter",
-    "version": "0.4.3",
+    "version": "0.4.4",
     "title": "Transport rings",
     "author": "estgamer/1000101",
     "description": "Adds animated transport rings, that teleport everything inside (players, chests, trains, buildings, biters). Endgame tech unlocks rings deployable from space platforms. Stargate design, SG.",
@@ -9,6 +9,7 @@
 		"base >= 2.0",
 		"space-age",
 		"(?) quality",
+		"(?) PickerDollies >= 1.2.6",
 		"(?) Cerys-Moon-of-Fulgora",
 		"(?) maraxsis",
 		"(?) planet-muluna",

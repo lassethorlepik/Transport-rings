@@ -1107,6 +1107,11 @@ function GUI.init()
 end
 
 
+function GUI.load()
+    -- Stub
+end
+
+
 -- Map functions that can be scheduled.
 
 Util.map_functions{
