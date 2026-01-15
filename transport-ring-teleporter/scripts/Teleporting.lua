@@ -10,11 +10,14 @@ local ignored_entities = {
 }
 
 local ignored_types = {
-    ["entity-ghost"] = true,
-    ["tile-ghost"] = true,
-    ["tile"] = true,
-    ["deconstructible-tile-proxy"] = true,
-    ["optimized-decorative"] = true
+    [ "entity-ghost" ] = true,
+    [ "tile-ghost" ] = true,
+    [ "tile" ] = true,
+    [ "deconstructible-tile-proxy" ] = true,
+    [ "optimized-decorative" ] = true,
+    [ "rocket-silo-rocket" ] = true,
+    [ "rocket-silo-rocket-shadow" ] = true,
+    [ "cargo-pod" ] = true,
 }
 
 
