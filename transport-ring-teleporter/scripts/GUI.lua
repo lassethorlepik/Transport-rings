@@ -170,14 +170,14 @@ local teleporter_table_desc = {
     },
     
     -- COL_ID: Teleporter ID
-    [ COL_ID ] = { advanced = true, caption = { "", "[virtual-signal=ring-id]" }, style = { width = 100, horizontal_align = "right" },
+    [ COL_ID ] = { advanced = true, caption = { "", "[virtual-signal=trt-ring-id]" }, style = { width = 100, horizontal_align = "right" },
         make_filter = function( parent, player )
             return parent.add{
                 type = "textfield",
                 text = "",
                 numeric = true,
                 allow_negative = true,
-                tags = { txtfield_type = "telep-filter_id" }
+                tags = { txtfield_type = "trt-filter-ring-id" }
             }
         end,
         update = function( player, element, data, entity, data_index, same_force, charge, diode, sprite, src_entity, src_ready )
@@ -201,14 +201,14 @@ local teleporter_table_desc = {
     },
     
     -- COL_TARGET: Teleporter Target
-    [ COL_TARGET ] = { advanced = true, caption = { "", "[virtual-signal=goto-ring-id]" }, style = { width = 100, horizontal_align = "right" },
+    [ COL_TARGET ] = { advanced = true, caption = { "", "[virtual-signal=trt-goto-id]" }, style = { width = 100, horizontal_align = "right" },
         make_filter = function( parent, player )
             return parent.add{
                 type = "textfield",
                 text = "",
                 numeric = true,
                 allow_negative = true,
-                tags = { txtfield_type = "telep-filter_target" }
+                tags = { txtfield_type = "trt-filter-goto-id" }
             }
         end,
         update = function( player, element, data, entity, data_index, same_force, charge, diode, sprite, src_entity, src_ready )
@@ -232,7 +232,7 @@ local teleporter_table_desc = {
     },
     
     -- COL_TIMER: Teleporter Timer
-    [ COL_TIMER ] = { advanced = true, caption = { "", "[virtual-signal=ring-timer]" }, style = { width = 32, horizontal_align = "center", vertical_align = "center" },
+    [ COL_TIMER ] = { advanced = true, caption = { "", "[virtual-signal=trt-timer]" }, style = { width = 32, horizontal_align = "center", vertical_align = "center" },
         make_filter = empty_element,
         update = function( player, element, data, entity, data_index, same_force, charge, diode, sprite, src_entity, src_ready )
             
@@ -255,12 +255,12 @@ local teleporter_table_desc = {
     },
     
     -- COL_SHIELD: Teleporter Shield
-    [ COL_SHIELD ] = { advanced = true, caption = { "", "[virtual-signal=shield-rings]" }, style = { width = 44, horizontal_align = "center", vertical_align = "center" },
+    [ COL_SHIELD ] = { advanced = true, caption = { "", "[virtual-signal=trt-protected]" }, style = { width = 44, horizontal_align = "center", vertical_align = "center" },
         make_filter = function( parent, player )
             local items = {}
             items[ 1 ] = { "", "[virtual-signal=signal-anything] ", { "custom.any" } }
             items[ 2 ] = { "", "[virtual-signal=shape-circle] ", { "custom.open" } }
-            items[ 3 ] = { "", "[virtual-signal=shield-rings] ", { "custom.protected" } }
+            items[ 3 ] = { "", "[virtual-signal=trt-protected] ", { "custom.protected" } }
             
             -- Create filter dropdown element
             return parent.add{
@@ -274,7 +274,7 @@ local teleporter_table_desc = {
             local shielded = Teleporter.has_protection_signal( entity )
             
             if shielded then
-                element.caption = { "", "[virtual-signal=shield-rings]" }
+                element.caption = { "", "[virtual-signal=trt-protected]" }
             else
                 element.caption = { "", "[virtual-signal=shape-circle]" }
             end
@@ -296,7 +296,7 @@ local teleporter_table_desc = {
                 text = "",
                 icon_selector = true,
                 ignored_by_interaction = false,
-                tags = { txtfield_type = "telep-filter_nickname" }
+                tags = { txtfield_type = "trt-filter-nickname" }
             }
         end,
         update = function( player, element, data, entity, data_index, same_force, charge, diode, sprite, src_entity, src_ready )
@@ -324,7 +324,7 @@ local teleporter_table_desc = {
                 text = nickname,
                 ignored_by_interaction = not same_force,
                 tags = {
-                    txtfield_type = "telep-nickname",
+                    txtfield_type = "trt-set-nickname",
                     unit_number = entity.unit_number
                 },
                 enabled = same_force,
@@ -976,7 +976,7 @@ end
 
 local function on_gui_text_changed( event )
     local elem = event.element
-    if elem and elem.tags and elem.tags.txtfield_type == "telep-nickname" then
+    if elem and elem.tags and elem.tags.txtfield_type == "trt-set-nickname" then
         local unit_number = elem.tags.unit_number
         if unit_number then
             local nickname = elem.text

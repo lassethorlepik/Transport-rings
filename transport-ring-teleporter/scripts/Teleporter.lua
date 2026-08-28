@@ -34,26 +34,26 @@ local table_insert                      = table.insert
 -- -------------------------------------------------------------------------------- --
 -- Names of Teleporter related prototypes
 
-local TELEPORTER_PLACER_MK1             = "ring-teleporter-placer"
-local TELEPORTER_PLACER_ITEM_MK1        = "ring-teleporter"
+local TELEPORTER_PLACER_MK1             = "trt-placer-mk1"
+local TELEPORTER_PLACER_ITEM_MK1        = "trt-platform-mk1"
 
-local TELEPORTER_CONTROLLER_MK1         = "ring-teleporter"
-local TELEPORTER_SPRITE_NAME_MK1        = "ring-teleporter-map-nickname"
-local TELEPORTER_OUTPUT_PORT_MK1        = "ring-teleporter-output"
+local TELEPORTER_CONTROLLER_MK1         = "trt-platform-mk1"
+local TELEPORTER_SPRITE_NAME_MK1        = "trt-map-interface-mk1"
+local TELEPORTER_OUTPUT_PORT_MK1        = "trt-output-mk1"
 
-local TELEPORTER_BACK_MK1               = "ring-teleporter-back-anim"
+local TELEPORTER_BACK_MK1               = "trt-mk1-anim-back"
 local TELEPORTER_BACK_MK1_LAYER         = "object-under"
 
-local TELEPORTER_FRONT_MK1              = "ring-teleporter-front-anim"
+local TELEPORTER_FRONT_MK1              = "trt-mk1-anim-front"
 local TELEPORTER_FRONT_MK1_LAYER        = "cargo-hatch"
 
-local TELEPORTER_BARRIER                = "ring-teleporter-barrier"
+local TELEPORTER_BARRIER                = "trt-barrier"
 
-local TELEPORTER_SPRITE_MK1_OBSOLETE    = "ring-teleporter-sprite"
-local TELEPORTER_BACK_MK1_OBSOLETE      = "ring-teleporter-back"
-local TELEPORTER_FRONT_MK1_OBSOLETE     = "ring-teleporter-front"
+--local TELEPORTER_SPRITE_MK1_OBSOLETE    = "trt-sprite"
+--local TELEPORTER_BACK_MK1_OBSOLETE      = "trt-back"
+--local TELEPORTER_FRONT_MK1_OBSOLETE     = "trt-front"
 
-local TELEPORTATION_SOUNDS              = { "ring-1", "ring-2", "ring-3", "ring-4", "ring-5" }
+local TELEPORTATION_SOUNDS              = { "trt-teleport-1", "trt-teleport-2", "trt-teleport-3", "trt-teleport-4", "trt-teleport-5" }
 
 local ENTITY_GHOST                      = "entity-ghost"
 
@@ -63,12 +63,14 @@ local ENTITY_GHOST                      = "entity-ghost"
 -- -------------------------------------------------------------------------------- --
 -- Obsolete or potentially orphaned entities to be cleaned up on migration
 
+--[[ -- 0.4.x from 0.3.x should have handled this
 local Teleporter_obsolete_entities      = {
     TELEPORTER_SPRITE_MK1_OBSOLETE,
     TELEPORTER_BACK_MK1_OBSOLETE,
     TELEPORTER_FRONT_MK1_OBSOLETE,
     TELEPORTER_BARRIER,
 }
+]]
 
 
 
@@ -136,9 +138,9 @@ local DIODE_YELLOW                      = defines.entity_status_diode.yellow
 local DIODE_GREEN                       = defines.entity_status_diode.green
 
 local DIODE_SPRITE   = {
-    [ DIODE_GREEN ]                     = "diode-green",
-    [ DIODE_YELLOW ]                    = "diode-yellow",
-    [ DIODE_RED ]                       = "diode-red",
+    [ DIODE_GREEN ]                     = "trt-diode-green",
+    [ DIODE_YELLOW ]                    = "trt-diode-yellow",
+    [ DIODE_RED ]                       = "trt-diode-red",
 }
 
 
@@ -166,16 +168,28 @@ local Teleporter_protected_entity_names = {
 
 local Teleporter_protected_entity_types = {
     [ "curved-rail-a" ]                 = true,
-    [ "elevated-curved-rail-a" ]        = true,
     [ "curved-rail-b" ]                 = true,
-    [ "elevated-curved-rail-b" ]        = true,
     [ "half-diagonal-rail" ]            = true,
+    [ "straight-rail" ]                 = true,
+    
+    [ "elevated-curved-rail-a" ]        = true,
+    [ "elevated-curved-rail-b" ]        = true,
     [ "elevated-half-diagonal-rail" ]   = true,
+    [ "elevated-straight-rail" ]        = true,
+    [ "rail-support" ]                  = true,
+    [ "rail-ramp" ]                     = true,
+    
     [ "legacy-curved-rail" ]            = true,
     [ "legacy-straight-rail" ]          = true,
-    [ "rail-ramp" ]                     = true,
-    [ "straight-rail" ]                 = true,
-    [ "elevated-straight-rail" ]        = true,
+    
+    [ "rail-chain-signal" ]             = true,
+    [ "rail-signal " ]                  = true,
+    [ "train-stop" ]                    = true,
+    
+    [ "locomotive" ]                    = true,
+    [ "cargo-wagon" ]                   = true,
+    [ "fluid-wagon" ]                   = true,
+    [ "artillery-wagon" ]               = true,
 }
 
 
@@ -184,15 +198,19 @@ local Teleporter_protected_entity_types = {
 -- -------------------------------------------------------------------------------- --
 -- Circuit Signals used by Teleporters
 
-local SIGNAL_RING_ID                    = "ring-id"
-local SIGNAL_GOTO_ID                    = "goto-ring-id"
-local SIGNAL_TIMER                      = "ring-timer"
-local SIGNAL_PROTECTED                  = "shield-rings"
+local SIGNAL_RING_ID                    = "trt-ring-id"
+local SIGNAL_GOTO_ID                    = "trt-goto-id"
+local SIGNAL_TIMER                      = "trt-timer"
+local SIGNAL_PROTECTED                  = "trt-protected"
 
-local SIGNAL_STATUS                     = "ring-status"
-local SIGNAL_STATUS_LOW_POWER           = "ring-status-low-power"
-local SIGNAL_STATUS_OCCUPIED            = "ring-status-occupied"
-local SIGNAL_STATUS_WAITING             = "ring-status-waiting"
+local SIGNAL_DETECT_ENTITIES            = "trt-entity-on-platform"
+local SIGNAL_READ_INVENTORIES           = "trt-inventory-on-entity"
+local SIGNAL_READ_MOVING_ENTITIES       = "trt-read-moving-entities"
+
+local SIGNAL_STATUS                     = "trt-status"
+local SIGNAL_STATUS_LOW_POWER           = "trt-status-low-power"
+local SIGNAL_STATUS_OCCUPIED            = "trt-status-occupied"
+local SIGNAL_STATUS_WAITING             = "trt-status-waiting"
 
 local Teleporter_custom_status_signals  = {
     [ SIGNAL_RING_ID ]                  = true,
@@ -214,6 +232,19 @@ Teleporter.SPRITE_NAME                  = TELEPORTER_SPRITE_NAME
 Teleporter.OCCUPIED_UNOCCUPIED          = OCCUPIED_UNOCCUPIED
 Teleporter.OCCUPIED_OUTGOING            = OCCUPIED_OUTGOING
 Teleporter.OCCUPIED_INCOMING            = OCCUPIED_INCOMING
+
+
+
+
+-- -------------------------------------------------------------------------------- --
+-- A handy function for all
+
+local function tryDestroy( o )
+    if o and o.valid then
+        o.destroy()
+    end
+end
+
 
 
 
@@ -302,13 +333,28 @@ function Teleporter.get_signal_timer( entity )
     if not( entity and entity.valid ) then return nil end
     return Teleporter_get_signal( entity, SIGNAL_TIMER )
 end
-function Teleporter.get_signal_shield( entity )
+function Teleporter.get_signal_protected( entity )
     if not( entity and entity.valid ) then return nil end
     return Teleporter_get_signal( entity, SIGNAL_PROTECTED )
 end
 function Teleporter.has_protection_signal( entity )
     if not( entity and entity.valid ) then return nil end
     return Teleporter_get_signal( entity, SIGNAL_PROTECTED ) ~= nil
+end
+
+function Teleporter.has_read_entity_signal( entity )
+    if not( entity and entity.valid ) then return nil end
+    return Teleporter_get_signal( entity, SIGNAL_DETECT_ENTITIES ) ~= nil
+end
+
+function Teleporter.has_read_inventory_signal( entity )
+    if not( entity and entity.valid ) then return nil end
+    return Teleporter_get_signal( entity, SIGNAL_READ_INVENTORIES ) ~= nil
+end
+
+function Teleporter.has_read_moving_entities_signal( entity )
+    if not( entity and entity.valid ) then return nil end
+    return Teleporter_get_signal( entity, SIGNAL_READ_MOVING_ENTITIES ) ~= nil
 end
 
 local function Teleporter_get_signal_ring_id( entity )
@@ -320,11 +366,23 @@ end
 local function Teleporter_get_signal_timer( entity )
     return Teleporter_get_signal( entity, SIGNAL_TIMER )
 end
-local function Teleporter_get_signal_shield( entity )
+local function Teleporter_get_signal_protected( entity )
     return Teleporter_get_signal( entity, SIGNAL_PROTECTED )
 end
 local function Teleporter_has_protection_signal( entity )
     return Teleporter_get_signal( entity, SIGNAL_PROTECTED ) ~= nil
+end
+
+local function Teleporter_has_read_entity_signal( entity )
+    return Teleporter_get_signal( entity, SIGNAL_DETECT_ENTITIES ) ~= nil
+end
+
+local function Teleporter_has_read_inventory_signal( entity )
+    return Teleporter_get_signal( entity, SIGNAL_READ_INVENTORIES ) ~= nil
+end
+
+local function Teleporter_has_read_moving_entities_signal( entity )
+    return Teleporter_get_signal( entity, SIGNAL_READ_MOVING_ENTITIES ) ~= nil
 end
 
 
@@ -398,7 +456,7 @@ end
 function Teleporter_set_nickname( data, nickname )
     --log( "Teleporter_set_nickname() - setting nickname at " .. data.poskey .. " to '" .. nickname .. "'" )
     storage.ring_teleporter_nicknames[ data.poskey ] = nickname
-    data[ TELEPORTER_SPRITE_NAME ].backer_name = "[item=ring-teleporter] " .. nickname
+    data[ TELEPORTER_SPRITE_NAME ].backer_name = "[technology=trt-mk1] " .. nickname
 end
 
 -- Set the teleporter nickname
@@ -460,30 +518,212 @@ local function Teleporter_update_output_port( data )
         behavior.remove_section( 1 )
     end
     
-    -- Add one new section for our signals
-    local section = behavior.add_section()
-    if not section then return end
+    -- Add one new section for the status signals
+    local status_section = behavior.add_section()
+    local function add_to_status_section( name, value )
+        -- Only add non-zero value signals to be consistent with vanilla (for anything inspecting the output signals via Lua)
+        if value == 0 then return end
+        status_section.set_slot( status_section.filters_count + 1, {
+            value = {
+                type = "virtual",
+                name = name,
+                quality = "normal"
+            },
+                min = value
+        } )
+    end
     
-    local occupied = data.occupied
+    if status_section then
+        
+        local occupied = data.occupied
+        
+        -- Get the status of the controller
+        local charge_level, diode, sprite, remaining = Teleporter_get_status( data )
+        
+        -- Convert complex results into simple virtual signals
+        local signal_tests = {
+            [ SIGNAL_STATUS ] = function() return diode == DIODE_GREEN and 1 or ( diode == DIODE_YELLOW and 2 or 3 ) end,
+            [ SIGNAL_STATUS_LOW_POWER ] = function() return ( entity.energy < storage.power_per_teleport ) and 1 or 0 end,
+            [ SIGNAL_STATUS_OCCUPIED ] = function() return occupied end,
+            [ SIGNAL_STATUS_WAITING ] = function() return remaining > 0 and math.floor( remaining + 1.0 ) or 0 end,
+        }
+        
+        for name, test in pairs( signal_tests ) do
+            add_to_status_section( name, test() )
+        end
+        
+    end
     
-    -- Get the status of the controller
-    local charge_level, diode, sprite, remaining = Teleporter_get_status( data )
-    
-    -- Convert complex results into simple virtual signals
-    local signal_tests = {
-        [ SIGNAL_STATUS ] = function() return diode == DIODE_GREEN and 1 or ( diode == DIODE_YELLOW and 2 or 3 ) end,
-        [ SIGNAL_STATUS_LOW_POWER ] = function() return ( entity.energy < storage.power_per_teleport ) and 1 or 0 end,
-        [ SIGNAL_STATUS_OCCUPIED ] = function() return occupied end,
-        [ SIGNAL_STATUS_WAITING ] = function() return remaining > 0 and math.floor( remaining + 1.0 ) or 0 end,
-    }
-    
-    -- Only add non-zero value signals to be consistent with vanilla (for anything inspecting the output signals via Lua)
-    local slot = 1
-    for name, test in pairs( signal_tests ) do
-        local value = test()
-        if value ~= 0 then
-            section.set_slot( slot, { value = { type = "virtual", name = name, quality = "normal" }, min = value } )
-            slot = slot + 1
+    -- Should we look at what's on the platform?
+    local read_entity = Teleporter_has_read_entity_signal( entity )
+    local read_inventory = Teleporter_has_read_inventory_signal( entity )
+    local read_moving = Teleporter_has_read_moving_entities_signal( entity )
+    if read_entity or read_inventory then
+        
+        -- Look at what is on the platform
+        local objects_on_pad = Teleporting.get_teleportable_objects( entity )
+        if #objects_on_pad > 0 then
+            
+            local train_limit = Util.train_length_limit()
+            local trains = {}
+            local player_count = 0
+            local train_count = 0
+            local spider_count = 0
+            local vehicle_count = 0
+            local entity_counts = {}
+            local inventory_counts = {}
+            local fluid_counts = {}
+            
+            -- Quality based counts
+            local function add_to_quality_count( target, name, quality, count )
+                local key = string.format( "%s-%s", name, quality )
+                local bucket = target[ key ]
+                if bucket then
+                    bucket.count = bucket.count + count
+                else
+                    target[ key ] = {
+                        name = name,
+                        quality = quality,
+                        count = count,
+                    }
+                end
+            end
+            
+            -- Quality based signals
+            local function signals_from_counts( target, source, signal_type )
+                -- Only add non-zero value signals to be consistent with vanilla (for anything inspecting the output signals via Lua)
+                local slot = target.filters_count + 1
+                for _, bucket in pairs( source ) do
+                    if bucket and bucket.count > 0 then
+                        target.set_slot( slot, { value = { type = signal_type, name = bucket.name, quality = bucket.quality }, min = bucket.count } )
+                        slot = slot + 1
+                    end
+                end
+                
+            end
+            
+            -- Get counts of entity inventory contents
+            local function add_inventory( inventory )
+                if inventory == nil then return end
+                local contents = inventory.get_contents()
+                if #contents == 0 then return end
+                for _, item in ipairs( contents ) do
+                    add_to_quality_count( inventory_counts, item.name, item.quality, item.count )
+                end
+            end
+            
+            -- Detect entities, required for both
+            for _, e in ipairs( objects_on_pad ) do
+                if e.train then
+                    -- trains will be handled separately
+                    if train_limit > 0 then
+                        if read_moving or ( e.train.speed == 0 ) then  -- Make sure it's stopped
+                            trains[ e.train.id ] = e.train
+                        end
+                    end
+                else
+                    if Util.can_vanilla_teleport( e ) then
+                        if not read_moving then -- Make sure it's stopped
+                            local et = e.type
+                            if et == "car" then
+                                if ( e.effective_speed or 0 ) > 0 then
+                                    goto skip
+                                end
+                                if ( e.speed or 0 ) > 0 then
+                                    goto skip
+                                end
+                                if read_entity then
+                                    vehicle_count = vehicle_count + 1
+                                end
+                            elseif et == "character"then
+                                if e.walking_state ~= nil and e.walking_state.walking then
+                                    goto skip
+                                end
+                                if read_entity then
+                                    player_count = player_count + 1
+                                end
+                            elseif et == "spider-vehicle" then
+                                if e.walking_state ~= nil and e.walking_state.walking then
+                                    goto skip
+                                end
+                                if read_entity then
+                                    spider_count = spider_count + 1
+                                end
+                            end
+                        end
+                    end
+                    if read_entity then
+                        -- Keep the entity count
+                        add_to_quality_count( entity_counts, e.name, e.quality, 1 )
+                    end
+                    if read_inventory then
+                        -- if the entity is a container, check what is inside
+                        for i = 1, e.get_max_inventory_index(), 1 do
+                            add_inventory( e.get_inventory( i ) )
+                        end
+                        -- if it has fluid storage boxes, read those too
+                        for name, amount in pairs( e.get_fluid_contents() )do
+                            add_to_quality_count( fluid_counts, name, "normal", math.floor( amount ) )
+                        end
+                    end
+                    ::skip::
+                end
+            end
+            
+            -- Now read trains
+            if train_limit > 0 then
+                for _, train in pairs( trains ) do
+                    if read_entity then
+                        train_count = train_count + 1
+                    end
+                    local carriages = train.carriages
+                    for index, carriage in ipairs( carriages ) do
+                        if read_entity then
+                            -- Add the carriage to the entity counts
+                            add_to_quality_count( entity_counts, carriage.name, carriage.quality, 1 )
+                        end
+                        if read_inventory then
+                            -- add the carriage inventory
+                            for i = 1, carriage.get_max_inventory_index(), 1 do
+                                add_inventory( carriage.get_inventory( i ) )
+                            end
+                            -- add the carriage fluids
+                            for name, amount in pairs( carriage.get_fluid_contents() )do
+                                add_to_quality_count( fluid_counts, name, "normal", math.floor( amount ) )
+                            end
+                        end
+                        if index >= train_limit then
+                            break
+                        end
+                    end
+                end
+            end
+            
+            -- Add a new section for the entity signals
+            if read_entity then
+                local platform_section = behavior.add_section()
+                if platform_section then
+                    signals_from_counts( platform_section, entity_counts, "entity" )
+                end
+            end
+            
+            -- Add a new section for the inventory signals
+            if read_inventory then
+                local inventory_section = behavior.add_section()
+                if inventory_section then
+                    signals_from_counts( inventory_section, inventory_counts, "item" )
+                    signals_from_counts( inventory_section, fluid_counts, "fluid" )
+                end
+            end
+            
+            -- Add the base entity type counts to the status section
+            if read_entity then
+                add_to_status_section( "signal-C", player_count )
+                add_to_status_section( "signal-T", train_count )
+                add_to_status_section( "signal-S", spider_count )
+                add_to_status_section( "signal-V", vehicle_count )
+            end
+            
         end
     end
 end
@@ -504,7 +744,7 @@ function Teleporter.update_custom_status( data )
     local signals = Teleporter_get_signals( entity, Teleporter_custom_status_signals )
     
     -- Shown after LED right before nickname
-    local protected = signals[ SIGNAL_PROTECTED ] and "[virtual-signal=shield-rings] " or "[virtual-signal=shape-circle] "
+    local protected = signals[ SIGNAL_PROTECTED ] and "[virtual-signal=trt-protected] " or "[virtual-signal=shape-circle] "
     local nickname = Teleporter_get_nickname( data.poskey )
     local pro_name = { "", protected, nickname }
     local label = { "", protected, nickname }
@@ -724,8 +964,8 @@ local function Teleporter_create_barrier( data )
     end
     
     local p = entity.position
+    local force = entity.force
     local surface = entity.surface
-    local barriers = {}
     local left = p.x - 6.5
     local right = p.x - 2.5
     local top = p.y - 4.5
@@ -741,17 +981,22 @@ local function Teleporter_create_barrier( data )
         -- Check for collisions and damage objects
         if not surface.can_place_entity{ name = TELEPORTER_BARRIER, position = pos } then
             ring_collision_incident( surface, pos, entity )
-            still_intact = entity.health > 0
+            still_intact = entity.valid and entity.health > 0
         end
         
         -- Teleporter destroyed?
         if not still_intact then return false end
         
         -- Try create the barrier for this tile
-        local barrier = surface.create_entity{ name = TELEPORTER_BARRIER, position = pos, force = entity.force }
+        local barrier = surface.create_entity{
+            name = TELEPORTER_BARRIER,
+            position = pos,
+            force = force,
+            create_build_effect_smoke = false,
+            move_stuck_players = true,
+        }
         if barrier and barrier.valid then
             -- Just ignore if the barrier didn't spawn, the teleporter is still intact
-            table_insert( barriers, barrier )
             barrier.destructible = false
         end
         
@@ -769,9 +1014,6 @@ local function Teleporter_create_barrier( data )
         if not try_place( left - 1, y ) then break end      -- Left border
         if not try_place( right + 1, y ) then break end     -- Right border
     end
-    
-    -- Store the barriers
-    data.barriers = barriers
     
     if still_intact then
         -- Hopefully it didn't get destroyed
@@ -793,15 +1035,27 @@ local function Teleporter_destroy_barrier( data )
     
     --log( "Teleporter_destroy_barrier() : " .. Teleporter_get_nickname( data.poskey ) )
     
-    if data.barriers then
-        for _, barrier in pairs( data.barriers ) do
-            if barrier and barrier.valid then
-                barrier.destroy()
-            end
-        end
-        data.barriers = nil
+    local entity = data[ TELEPORTER_CONTROLLER ]
+    if not ( entity and entity.valid ) then
+        return
     end
     
+    local p = entity.position
+    local surface = entity.surface
+    
+    local barriers = surface.find_entities_filtered{
+        name = "trt-barrier",
+        area = {
+            left_top = { x = p.x - 7, y = p.y - 5 },
+            right_bottom = { x = p.x - 2, y = p.y - 0.5 }
+        }
+    }
+    
+    if barriers then
+        for _, barrier in pairs( barriers ) do
+            tryDestroy( barrier )
+        end
+    end
 end
 
 
@@ -856,14 +1110,8 @@ local function Teleporter_destroy_animation( data )
     
     --log( "Teleporter_destroy_animation() : " .. Teleporter_get_nickname( data.poskey ) )
     
-    local function destroy( animation )
-        if animation and animation.valid then
-            animation.destroy()
-        end
-    end
-    
-    destroy( data.animation1 )
-    destroy( data.animation2 )
+    tryDestroy( data.animation1 )
+    tryDestroy( data.animation2 )
     
     data.animation1 = nil
     data.animation2 = nil
@@ -913,6 +1161,7 @@ local function Teleporter_teleport_objects( src, dst )
     
     --log( "Teleporter_teleport_objects()\n\tsrc = " .. Teleporter_get_nickname( src.poskey ) .. "\n\tdst = " .. Teleporter_get_nickname( dst.poskey ) )
     
+    --[[
     local function get_objects( surface, p )
         local area = {
             left_top = { x = p.x - 7, y = p.y - 5 },
@@ -920,15 +1169,19 @@ local function Teleporter_teleport_objects( src, dst )
         }
         return surface.find_entities_filtered{ area = area }
     end
-    
+    ]]
     local src_surface = src.surface
     local src_position = src.position
     
     local dst_surface = dst.surface
     local dst_position = dst.position
     
-    local src_objects = get_objects( src_surface, src_position )
-    local dst_objects = get_objects( dst_surface, dst_position )
+    --local src_objects = get_objects( src_surface, src_position )
+    --local dst_objects = get_objects( dst_surface, dst_position )
+    
+    
+    local src_objects = Teleporting.get_teleportable_objects( src )
+    local dst_objects = Teleporting.get_teleportable_objects( dst )
     
     local function swap_a_b( objects, surface, from, to )
         for _, target in ipairs( objects ) do
@@ -1007,14 +1260,12 @@ function Teleporter.initiate_teleport( src, dst )
         cancel_teleport()
         return false
     end
-
     
     local dst_entity = dst[ TELEPORTER_CONTROLLER ]
     if not ( dst_entity and dst_entity.valid and dst_entity.energy >= power_per_teleport ) then
         cancel_teleport()
         return false
     end
-
     
     --log( "Teleporter.initiate_teleport()\n\tsrc = " .. Teleporter_get_nickname( src.poskey ) .. "\n\tdst = " .. Teleporter_get_nickname( dst.poskey ) )
     
@@ -1079,7 +1330,7 @@ function Teleporter.update_teleporter( data )
     
     -- Try to schedule a teleport from circuit signals
     if ( data.occupied == OCCUPIED_UNOCCUPIED )
-    and data[ TELEPORTER_CONTROLLER ].energy >= storage.power_per_teleport
+    and entity.energy >= storage.power_per_teleport
     and not Teleporter_is_waiting( data )
     then
         
@@ -1137,16 +1388,15 @@ function Teleporter.new( entity )
     
     -- Destroy the placer entity
     if e_name == TELEPORTER_PLACER_MK1 then
-        entity.destroy()
+        tryDestroy( entity )
     end
     
     
     -- Encapsulate all data into one table entry
     local data = {
-        --entity = nil,         -- For reference
-        --renderer = nil,       -- For reference
-        --output = nil,         -- For reference
-        --station = nil,        -- For reference
+        --[ TELEPORTER_CONTROLLER ] = nil,  -- For reference
+        --[ TELEPORTER_SPRITE_NAME ] = nil, -- For reference
+        --[ TELEPORTER_OUTPUT_PORT ] = nil, -- For reference
         
         --unit_number = 0,      -- For reference
         poskey = poskey,
@@ -1226,7 +1476,7 @@ function Teleporter.new( entity )
             local cd = find_or_create( pos, component.name, component.offset, component.has_quality )
             if component.protected then
                 cd.destructible = false
-                cd.minable = false
+                cd.minable_flag = false
             end
             data[ id ] = cd
         end
@@ -1246,7 +1496,7 @@ function Teleporter.new( entity )
     
     
     -- Update the station name regardless of source
-    data[ TELEPORTER_SPRITE_NAME ].backer_name = "[item=ring-teleporter] " .. nickname
+    data[ TELEPORTER_SPRITE_NAME ].backer_name = "[technology=trt-mk1] " .. nickname
     --data[ TELEPORTER_SPRITE_NAME ].backer_name = nickname
     
     
@@ -1301,9 +1551,7 @@ function Teleporter.remove( entity, scrub_name )
                 name = name,
                 area = area
             } or {} )do
-                if e.valid then
-                    e.destroy()
-                end
+                tryDestroy( e )
             end
             
             -- Destroy ghost entities
@@ -1312,9 +1560,7 @@ function Teleporter.remove( entity, scrub_name )
                 ghost_name = name,
                 area = area
             } or {} ) do
-                if e.valid then
-                    e.destroy()
-                end
+                tryDestroy( e )
             end
             
         end
@@ -1331,20 +1577,10 @@ function Teleporter.remove( entity, scrub_name )
     local data = storage.ring_teleporter_teleporters[ unit_number ]
     if data then
         
-        local function tryDestroy( o ) -- o can be an entity or an animation
-            if o and o.valid then
-                o.destroy()
-            end
-        end
-        
         tryDestroy( data.animation1 )
         tryDestroy( data.animation2 )
         
-        if data.barriers then
-            for _, barrier in pairs( data.barriers ) do
-                tryDestroy( barrier )
-            end
-        end
+        Teleporter_destroy_barrier( data )
         
         -- Clear all entities
         for id, _ in pairs( Teleporter_component_entity_names ) do
@@ -1360,7 +1596,6 @@ function Teleporter.remove( entity, scrub_name )
         
         data.animation1 = nil
         data.animation2 = nil
-        data.barriers = nil
         
         storage.ring_teleporter_teleporters[ unit_number ] = nil
         
@@ -1397,12 +1632,14 @@ function Teleporter.rebuild_data()
         local find_entities_filtered = surface.find_entities_filtered
         
         -- Clean up all obsolete entities
+        --[[ -- 0.4.x should have handled this from 0.3.x
         for _, name in pairs( Teleporter_obsolete_entities ) do
             local entities = find_entities_filtered{ name = name }
             for _, entity in pairs( entities ) do
-                entity.destroy()
+                tryDestroy( entity )
             end
         end
+        ]]
         
         -- Look for component entities of teleporters that somehow didn't get cleaned up
         for id, component in pairs( Teleporter_component_entity_names ) do
@@ -1436,11 +1673,11 @@ function Teleporter.rebuild_data()
                 local function process_entities( entities )
                     for _, entity in pairs( entities ) do
                         local orphaned = not found_near( entity )
-                        --log( string.format( "\torphaned? %s : %s : %s", tostring( orphaned ), Util.poskey( entity ), ( ( entity.name == ENTITY_GHOST ) and ( entity.name .. " -> " .. entity.ghost_name ) or entity.name ) ) )
+                        --log( string.format( "\torphaned? %s : %s : %s", tostring( orphaned ), Util_poskey( entity ), ( ( entity.name == ENTITY_GHOST ) and ( entity.name .. " -> " .. entity.ghost_name ) or entity.name ) ) )
                         
                         -- If it's not found near a base object or placement object or a ghost of either, destroy it
                         if orphaned then
-                            entity.destroy()
+                            tryDestroy( entity )
                         end
                     end
                 end
@@ -1460,6 +1697,9 @@ function Teleporter.rebuild_data()
         end
         
     end
+    
+    -- Destroy all orphaned animations
+    rendering.clear( "transport-ring-teleporter" )
     
 end
 
@@ -1491,6 +1731,8 @@ local function on_player_setup_blueprint( event )
         return
     end
     
+    --log( "on_player_setup_blueprint() - BEGIN" )
+    
     local bp_ents = blueprint.get_blueprint_entities()
     local src_ents = event.mapping.get()
     
@@ -1518,6 +1760,8 @@ local function on_player_setup_blueprint( event )
             -- Clear output port circuit signals (invalid in a blueprint)
             if bp_ent.name == TELEPORTER_OUTPUT_PORT_MK1 then
                 
+                --log( "on_player_setup_blueprint() - output port found - clearing signals in blueprint" )
+                
                 if bp_ent.control_behavior then
                     bp_ent.control_behavior.sections = nil
                     modified = true
@@ -1529,8 +1773,11 @@ local function on_player_setup_blueprint( event )
     end
     
     if modified then
+        --log( "on_player_setup_blueprint() - modified - writing back changes" )
         blueprint.set_blueprint_entities( bp_ents )
     end
+    
+    --log( "on_player_setup_blueprint() - END" )
 end
 
 
@@ -1538,9 +1785,10 @@ end
 local function on_built( event )
     local entity = event.entity
     local e_name = entity.name
+    local i_name = ( e_name == ENTITY_GHOST ) and ( " : " .. entity.ghost_name ) or ""
     local player_index = event.player_index
     local player = player_index and game.players[ player_index ]
-    --log( "on_built() : " .. entity.name .. " " .. ( ( entity.name == ENTITY_GHOST ) and entity.ghost_name or "" ) )
+    --log( "on_built() : ENTER : " .. e_name .. i_name  )
     
     
     -- Look for another teleporter that would overlap
@@ -1560,7 +1808,7 @@ local function on_built( event )
             end
             for _, e in pairs( entities ) do
                 if e.unit_number ~= unit_number then    -- Don't detect as colliding with itself
-                    --log( "unit: " .. tostring( unit_number ) .." collided with: " ..tostring( e.unit_number ) .. " " .. name .. " " .. ( ghost_name and ghost_name or "" ) )
+                    --log( "on_built() : check_overlap() : unit: " .. tostring( unit_number ) .." collided with: " ..tostring( e.unit_number ) .. " " .. name .. " " .. ( ghost_name and ghost_name or "" ) )
                     return true
                 end
             end
@@ -1593,26 +1841,31 @@ local function on_built( event )
             } or {}
             
             for _, e in pairs( entities ) do
-                e.destroy()
+                --log( "on_built() : clean_mess_near() : cleaning : " .. e.name .. ( e.name == ENTITY_GHOST and ( " : " .. e.ghost_name ) or "" ) )
+                tryDestroy( e )
             end
             
         end
         
         -- And destroy the bad entity itself
-        entity.destroy()
+        --log( "on_built() : clean_mess_near() : cleaning : " .. e_name .. i_name )
+        tryDestroy( entity )
     end
     
     
-    if entity.name == ENTITY_GHOST then
+    if e_name == ENTITY_GHOST then
+        --log( "on_built() : ghost : " .. entity.ghost_name )
         
         
         if entity.ghost_name == TELEPORTER_PLACER_MK1 then
             
             -- Check if this placer would collide with another teleporter
             if check_overlap( entity ) then
-                entity.destroy()   -- Just destroy this one, the other one was here first
+                tryDestroy( entity )   -- Just destroy this one, the other one was here first
+                --log( "on_built() : --- : GHOST PLACER OVERLAP : " .. e_name .. i_name )
             end
             
+            --log( "on_built() : EXIT : GHOST PLACER : " .. e_name .. i_name )
             return
         end
         
@@ -1623,6 +1876,7 @@ local function on_built( event )
             -- Check if this controller would collide with another teleporter
             if check_overlap( entity ) then
                 clean_mess_near( entity )   -- Can only be placed by blueprint, meaning the rest of the components are misplaced too
+                --log( "on_built() : EXIT : GHOST CONTROLLER OVERLAP : " .. e_name .. i_name )
                 return
             end
             
@@ -1638,6 +1892,7 @@ local function on_built( event )
                 quality = entity.quality,
             }
             
+            --log( "on_built() : EXIT : GHOST CONTROLER PLACER REPLACE : " .. e_name .. i_name )
             return
         end
         
@@ -1650,6 +1905,7 @@ local function on_built( event )
             --log( "on_built() - setting nickname at " .. poskey .. " to '" .. nickname .. "'" )
             storage.ring_teleporter_nicknames[ poskey ] = nickname
             
+            --log( "on_built() : EXIT : GHOST TRAIN STOP  : " .. e_name .. i_name )
             return
         end
         
@@ -1684,14 +1940,17 @@ local function on_built( event )
             
             clean_mess_near( entity )   -- Would overlap with an existing teleporter/ghost
             
+            --log( "on_built() : EXIT : PLACER OVERLAP  : " .. e_name .. i_name )
             return
         end
         
-        
         -- Try create the teleporter
+        --log( "on_built() : NEW TELEPORTER  : " .. e_name .. i_name )
         Teleporter.new( event.entity )
         
     end
+    
+    --log( "on_built() : EXIT : BOTTOM  : " .. e_name .. i_name )
 end
 
 
@@ -1724,22 +1983,18 @@ end
 
 -- Picker Dollies support (blacklist)
 local function init_PickerDollies()
-    if remote.interfaces[ "PickerDollies" ] and remote.interfaces[ "PickerDollies" ][ "add_blacklist_name" ] then
-        
-        local function blacklist( name )
-            remote.call( "PickerDollies", "add_blacklist_name", name )
-        end
-        
-        -- No way to signal to Picker Dollies "not right now" and it provides no public API to
-        -- make use of it's functions to do the work of moving all the component entities,
-        -- So instead we'll just blacklist everything from being moved.
-        blacklist( TELEPORTER_PLACER_MK1 )
-        blacklist( TELEPORTER_CONTROLLER_MK1 )
-        blacklist( TELEPORTER_SPRITE_NAME_MK1 )
-        blacklist( TELEPORTER_OUTPUT_PORT_MK1 )
-        blacklist( TELEPORTER_BARRIER )
-        
-    end
+    if not Util.PickerDollies_Installed() then return end
+    
+    -- No way to signal to Picker Dollies "not right now" and it provides no public API to
+    -- make use of it's functions to do the work of moving all the component entities,
+    -- So instead we'll just blacklist everything from being moved.
+    local blacklist = Util.PickerDollies_Blacklist
+    
+    blacklist( TELEPORTER_PLACER_MK1 )
+    blacklist( TELEPORTER_CONTROLLER_MK1 )
+    blacklist( TELEPORTER_SPRITE_NAME_MK1 )
+    blacklist( TELEPORTER_OUTPUT_PORT_MK1 )
+    blacklist( TELEPORTER_BARRIER )
     
 end
 
@@ -1753,17 +2008,19 @@ function Teleporter.bootstrap()
     
     -- Blueprinting
     script.on_event( defines.events.on_player_setup_blueprint, on_player_setup_blueprint )
-    script.on_event( defines.events.on_pre_build, on_pre_build )
     
     -- Entity Built
     script.on_event( defines.events.on_built_entity, on_built, build_event_filter )
     script.on_event( defines.events.on_robot_built_entity, on_built, build_event_filter )
     script.on_event( defines.events.on_space_platform_built_entity, on_built, build_event_filter )
+    script.on_event( defines.events.script_raised_built, on_built, build_event_filter )
+    script.on_event( defines.events.script_raised_revive, on_built, build_event_filter )
     
     -- Entity Removed
     script.on_event( defines.events.on_player_mined_entity, on_entity_removed_clean, remove_event_filter )
     script.on_event( defines.events.on_robot_mined_entity, on_entity_removed_clean, remove_event_filter )
     script.on_event( defines.events.on_space_platform_pre_mined, on_entity_removed_clean, remove_event_filter )
+    script.on_event( defines.events.script_raised_destroy, on_entity_removed_clean, build_event_filter )
     script.on_event( defines.events.on_entity_died, on_entity_removed_dirty, remove_event_filter )
     
     -- Entity settings copy-paste
