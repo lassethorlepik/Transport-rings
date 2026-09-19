@@ -183,7 +183,7 @@ local Teleporter_protected_entity_types = {
     [ "legacy-straight-rail" ]          = true,
     
     [ "rail-chain-signal" ]             = true,
-    [ "rail-signal " ]                  = true,
+    [ "rail-signal" ]                   = true,
     [ "train-stop" ]                    = true,
     
     [ "locomotive" ]                    = true,
@@ -504,226 +504,251 @@ end
 -- -------------------------------------------------------------------------------- --
 -- Update the signals on the output port
 
+local OUTPUT_ENTITY_SCAN_INTERVAL = 60
+local OUTPUT_INVENTORY_SCAN_INTERVAL = 120
+
 local function Teleporter_update_output_port( data )
-    
     local entity = data[ TELEPORTER_CONTROLLER ]
     local output = data.output_port
-    
-    -- Get the control behaviour of the output port
+    if not ( output and output.valid ) then return end
+
     local behavior = output.get_control_behavior()
     if not behavior then return end
-    
-    -- Remove any existing sections from it
-    while( behavior.sections_count > 0 )do
+
+    local function quality_name( quality )
+        if not quality then return "normal" end
+        return type( quality ) == "string" and quality or quality.name
+    end
+
+    local function add_count( target, name, quality, count )
+        quality = quality_name( quality )
+        local key = name .. "\31" .. quality
+        local bucket = target[ key ]
+        if bucket then
+            bucket.count = bucket.count + count
+        else
+            target[ key ] = { name = name, quality = quality, count = count }
+        end
+    end
+
+    local function counts_to_signals( counts, signal_type, floor_count )
+        local result = {}
+        for _, bucket in pairs( counts ) do
+            local count = floor_count and math.floor( bucket.count ) or bucket.count
+            if count > 0 then
+                result[ #result + 1 ] = {
+                    type = signal_type,
+                    name = bucket.name,
+                    quality = bucket.quality,
+                    count = count,
+                }
+            end
+        end
+        table.sort( result, function( a, b )
+            if a.type ~= b.type then return a.type < b.type end
+            if a.name ~= b.name then return a.name < b.name end
+            return a.quality < b.quality
+        end )
+        return result
+    end
+
+    local function add_inventory( counts, inventory )
+        if not inventory then return end
+        for _, item in ipairs( inventory.get_contents() ) do
+            add_count( counts, item.name, item.quality, item.count )
+        end
+    end
+
+    local requested = Teleporter_get_signals( entity, {
+        [ SIGNAL_DETECT_ENTITIES ] = true,
+        [ SIGNAL_READ_INVENTORIES ] = true,
+        [ SIGNAL_READ_MOVING_ENTITIES ] = true,
+    } )
+    local read_entity = requested[ SIGNAL_DETECT_ENTITIES ] ~= nil
+    local read_inventory = requested[ SIGNAL_READ_INVENTORIES ] ~= nil
+    local read_moving = requested[ SIGNAL_READ_MOVING_ENTITIES ] ~= nil
+    local tick = game.tick
+
+    local entity_due = read_entity and (
+        not data.output_read_entity
+        or data.output_read_moving ~= read_moving
+        or not data.output_last_entity_scan
+        or tick - data.output_last_entity_scan >= OUTPUT_ENTITY_SCAN_INTERVAL
+    )
+    local inventory_due = read_inventory and (
+        not data.output_read_inventory
+        or data.output_read_moving ~= read_moving
+        or not data.output_last_inventory_scan
+        or tick - data.output_last_inventory_scan >= OUTPUT_INVENTORY_SCAN_INTERVAL
+    )
+
+    if not read_entity then
+        data.output_entity_signals = nil
+        data.output_entity_summary = nil
+        data.output_last_entity_scan = nil
+    end
+    if not read_inventory then
+        data.output_inventory_signals = nil
+        data.output_last_inventory_scan = nil
+    end
+
+    if entity_due or inventory_due then
+        local objects_on_pad = Teleporting.get_teleportable_objects( entity )
+        local train_limit = Util.train_length_limit()
+        local trains = {}
+        local entity_counts = {}
+        local inventory_counts = {}
+        local fluid_counts = {}
+        local summary = { players = 0, trains = 0, spiders = 0, vehicles = 0 }
+
+        for _, e in ipairs( objects_on_pad ) do
+            if e.train then
+                if train_limit > 0 and ( read_moving or e.train.speed == 0 ) then
+                    trains[ e.train.id ] = e.train
+                end
+            else
+                local entity_type = e.type
+                if Util.can_vanilla_teleport( e ) and not read_moving then
+                    if entity_type == "car" and (
+                        ( e.effective_speed or 0 ) ~= 0 or ( e.speed or 0 ) ~= 0
+                    ) then
+                        goto skip_entity
+                    elseif entity_type == "character" and e.walking_state and e.walking_state.walking then
+                        goto skip_entity
+                    elseif entity_type == "spider-vehicle" and e.walking_state and e.walking_state.walking then
+                        goto skip_entity
+                    end
+                end
+
+                if entity_due then
+                    add_count( entity_counts, e.name, e.quality, 1 )
+                    if entity_type == "car" then
+                        summary.vehicles = summary.vehicles + 1
+                    elseif entity_type == "character" then
+                        summary.players = summary.players + 1
+                    elseif entity_type == "spider-vehicle" then
+                        summary.spiders = summary.spiders + 1
+                    end
+                end
+
+                -- Character inventories are private and potentially very large; only
+                -- report inventories belonging to world entities and rolling stock.
+                if inventory_due and entity_type ~= "character" then
+                    for i = 1, e.get_max_inventory_index(), 1 do
+                        add_inventory( inventory_counts, e.get_inventory( i ) )
+                    end
+                    for name, amount in pairs( e.get_fluid_contents() ) do
+                        add_count( fluid_counts, name, "normal", amount )
+                    end
+                end
+                ::skip_entity::
+            end
+        end
+
+        if train_limit > 0 then
+            for _, train in pairs( trains ) do
+                if entity_due then summary.trains = summary.trains + 1 end
+                for index, carriage in ipairs( train.carriages ) do
+                    if entity_due then
+                        add_count( entity_counts, carriage.name, carriage.quality, 1 )
+                    end
+                    if inventory_due then
+                        for i = 1, carriage.get_max_inventory_index(), 1 do
+                            add_inventory( inventory_counts, carriage.get_inventory( i ) )
+                        end
+                        for name, amount in pairs( carriage.get_fluid_contents() ) do
+                            add_count( fluid_counts, name, "normal", amount )
+                        end
+                    end
+                    if index >= train_limit then break end
+                end
+            end
+        end
+
+        if entity_due then
+            data.output_entity_signals = counts_to_signals( entity_counts, "entity", false )
+            data.output_entity_summary = summary
+            data.output_last_entity_scan = tick
+        end
+        if inventory_due then
+            local signals = counts_to_signals( inventory_counts, "item", false )
+            local fluids = counts_to_signals( fluid_counts, "fluid", true )
+            for _, signal in ipairs( fluids ) do
+                signals[ #signals + 1 ] = signal
+            end
+            data.output_inventory_signals = signals
+            data.output_last_inventory_scan = tick
+        end
+    end
+
+    data.output_read_entity = read_entity
+    data.output_read_inventory = read_inventory
+    data.output_read_moving = read_moving
+
+    local sections = { {} }
+    local function add_status( name, value )
+        if value ~= 0 then
+            sections[ 1 ][ #sections[ 1 ] + 1 ] = {
+                type = "virtual", name = name, quality = "normal", count = value
+            }
+        end
+    end
+
+    local _, diode, _, remaining = Teleporter_get_status( data )
+    add_status( SIGNAL_STATUS, diode == DIODE_GREEN and 1 or ( diode == DIODE_YELLOW and 2 or 3 ) )
+    add_status( SIGNAL_STATUS_LOW_POWER, entity.energy < storage.power_per_teleport and 1 or 0 )
+    add_status( SIGNAL_STATUS_OCCUPIED, data.occupied )
+    add_status( SIGNAL_STATUS_WAITING, remaining > 0 and math.floor( remaining + 1 ) or 0 )
+
+    local summary = read_entity and data.output_entity_summary
+    if summary then
+        add_status( "signal-C", summary.players )
+        add_status( "signal-T", summary.trains )
+        add_status( "signal-S", summary.spiders )
+        add_status( "signal-V", summary.vehicles )
+    end
+    table.sort( sections[ 1 ], function( a, b ) return a.name < b.name end )
+
+    if read_entity and data.output_entity_signals and #data.output_entity_signals > 0 then
+        sections[ #sections + 1 ] = data.output_entity_signals
+    end
+    if read_inventory and data.output_inventory_signals and #data.output_inventory_signals > 0 then
+        sections[ #sections + 1 ] = data.output_inventory_signals
+    end
+
+    local function sections_equal( a, b )
+        if not a or #a ~= #b then return false end
+        for section_index, section in ipairs( a ) do
+            local other = b[ section_index ]
+            if not other or #section ~= #other then return false end
+            for signal_index, signal in ipairs( section ) do
+                local candidate = other[ signal_index ]
+                if not candidate
+                or signal.type ~= candidate.type
+                or signal.name ~= candidate.name
+                or signal.quality ~= candidate.quality
+                or signal.count ~= candidate.count then
+                    return false
+                end
+            end
+        end
+        return true
+    end
+
+    if sections_equal( data.output_sections, sections ) then return end
+    data.output_sections = sections
+
+    while behavior.sections_count > 0 do
         behavior.remove_section( 1 )
     end
-    
-    -- Add one new section for the status signals
-    local status_section = behavior.add_section()
-    local function add_to_status_section( name, value )
-        -- Only add non-zero value signals to be consistent with vanilla (for anything inspecting the output signals via Lua)
-        if value == 0 then return end
-        status_section.set_slot( status_section.filters_count + 1, {
-            value = {
-                type = "virtual",
-                name = name,
-                quality = "normal"
-            },
-                min = value
-        } )
-    end
-    
-    if status_section then
-        
-        local occupied = data.occupied
-        
-        -- Get the status of the controller
-        local charge_level, diode, sprite, remaining = Teleporter_get_status( data )
-        
-        -- Convert complex results into simple virtual signals
-        local signal_tests = {
-            [ SIGNAL_STATUS ] = function() return diode == DIODE_GREEN and 1 or ( diode == DIODE_YELLOW and 2 or 3 ) end,
-            [ SIGNAL_STATUS_LOW_POWER ] = function() return ( entity.energy < storage.power_per_teleport ) and 1 or 0 end,
-            [ SIGNAL_STATUS_OCCUPIED ] = function() return occupied end,
-            [ SIGNAL_STATUS_WAITING ] = function() return remaining > 0 and math.floor( remaining + 1.0 ) or 0 end,
-        }
-        
-        for name, test in pairs( signal_tests ) do
-            add_to_status_section( name, test() )
-        end
-        
-    end
-    
-    -- Should we look at what's on the platform?
-    local read_entity = Teleporter_has_read_entity_signal( entity )
-    local read_inventory = Teleporter_has_read_inventory_signal( entity )
-    local read_moving = Teleporter_has_read_moving_entities_signal( entity )
-    if read_entity or read_inventory then
-        
-        -- Look at what is on the platform
-        local objects_on_pad = Teleporting.get_teleportable_objects( entity )
-        if #objects_on_pad > 0 then
-            
-            local train_limit = Util.train_length_limit()
-            local trains = {}
-            local player_count = 0
-            local train_count = 0
-            local spider_count = 0
-            local vehicle_count = 0
-            local entity_counts = {}
-            local inventory_counts = {}
-            local fluid_counts = {}
-            
-            -- Quality based counts
-            local function add_to_quality_count( target, name, quality, count )
-                local key = string.format( "%s-%s", name, quality )
-                local bucket = target[ key ]
-                if bucket then
-                    bucket.count = bucket.count + count
-                else
-                    target[ key ] = {
-                        name = name,
-                        quality = quality,
-                        count = count,
-                    }
-                end
-            end
-            
-            -- Quality based signals
-            local function signals_from_counts( target, source, signal_type )
-                -- Only add non-zero value signals to be consistent with vanilla (for anything inspecting the output signals via Lua)
-                local slot = target.filters_count + 1
-                for _, bucket in pairs( source ) do
-                    if bucket and bucket.count > 0 then
-                        target.set_slot( slot, { value = { type = signal_type, name = bucket.name, quality = bucket.quality }, min = bucket.count } )
-                        slot = slot + 1
-                    end
-                end
-                
-            end
-            
-            -- Get counts of entity inventory contents
-            local function add_inventory( inventory )
-                if inventory == nil then return end
-                local contents = inventory.get_contents()
-                if #contents == 0 then return end
-                for _, item in ipairs( contents ) do
-                    add_to_quality_count( inventory_counts, item.name, item.quality, item.count )
-                end
-            end
-            
-            -- Detect entities, required for both
-            for _, e in ipairs( objects_on_pad ) do
-                if e.train then
-                    -- trains will be handled separately
-                    if train_limit > 0 then
-                        if read_moving or ( e.train.speed == 0 ) then  -- Make sure it's stopped
-                            trains[ e.train.id ] = e.train
-                        end
-                    end
-                else
-                    if Util.can_vanilla_teleport( e ) then
-                        if not read_moving then -- Make sure it's stopped
-                            local et = e.type
-                            if et == "car" then
-                                if ( e.effective_speed or 0 ) > 0 then
-                                    goto skip
-                                end
-                                if ( e.speed or 0 ) > 0 then
-                                    goto skip
-                                end
-                                if read_entity then
-                                    vehicle_count = vehicle_count + 1
-                                end
-                            elseif et == "character"then
-                                if e.walking_state ~= nil and e.walking_state.walking then
-                                    goto skip
-                                end
-                                if read_entity then
-                                    player_count = player_count + 1
-                                end
-                            elseif et == "spider-vehicle" then
-                                if e.walking_state ~= nil and e.walking_state.walking then
-                                    goto skip
-                                end
-                                if read_entity then
-                                    spider_count = spider_count + 1
-                                end
-                            end
-                        end
-                    end
-                    if read_entity then
-                        -- Keep the entity count
-                        add_to_quality_count( entity_counts, e.name, e.quality, 1 )
-                    end
-                    if read_inventory then
-                        -- if the entity is a container, check what is inside
-                        for i = 1, e.get_max_inventory_index(), 1 do
-                            add_inventory( e.get_inventory( i ) )
-                        end
-                        -- if it has fluid storage boxes, read those too
-                        for name, amount in pairs( e.get_fluid_contents() )do
-                            add_to_quality_count( fluid_counts, name, "normal", math.floor( amount ) )
-                        end
-                    end
-                    ::skip::
-                end
-            end
-            
-            -- Now read trains
-            if train_limit > 0 then
-                for _, train in pairs( trains ) do
-                    if read_entity then
-                        train_count = train_count + 1
-                    end
-                    local carriages = train.carriages
-                    for index, carriage in ipairs( carriages ) do
-                        if read_entity then
-                            -- Add the carriage to the entity counts
-                            add_to_quality_count( entity_counts, carriage.name, carriage.quality, 1 )
-                        end
-                        if read_inventory then
-                            -- add the carriage inventory
-                            for i = 1, carriage.get_max_inventory_index(), 1 do
-                                add_inventory( carriage.get_inventory( i ) )
-                            end
-                            -- add the carriage fluids
-                            for name, amount in pairs( carriage.get_fluid_contents() )do
-                                add_to_quality_count( fluid_counts, name, "normal", math.floor( amount ) )
-                            end
-                        end
-                        if index >= train_limit then
-                            break
-                        end
-                    end
-                end
-            end
-            
-            -- Add a new section for the entity signals
-            if read_entity then
-                local platform_section = behavior.add_section()
-                if platform_section then
-                    signals_from_counts( platform_section, entity_counts, "entity" )
-                end
-            end
-            
-            -- Add a new section for the inventory signals
-            if read_inventory then
-                local inventory_section = behavior.add_section()
-                if inventory_section then
-                    signals_from_counts( inventory_section, inventory_counts, "item" )
-                    signals_from_counts( inventory_section, fluid_counts, "fluid" )
-                end
-            end
-            
-            -- Add the base entity type counts to the status section
-            if read_entity then
-                add_to_status_section( "signal-C", player_count )
-                add_to_status_section( "signal-T", train_count )
-                add_to_status_section( "signal-S", spider_count )
-                add_to_status_section( "signal-V", vehicle_count )
-            end
-            
+    for _, signals in ipairs( sections ) do
+        local section = behavior.add_section()
+        if not section then break end
+        for slot, signal in ipairs( signals ) do
+            section.set_slot( slot, {
+                value = { type = signal.type, name = signal.name, quality = signal.quality },
+                min = signal.count,
+            } )
         end
     end
 end
@@ -972,6 +997,7 @@ local function Teleporter_create_barrier( data )
     local bottom = p.y - 1.5
     local unit_number = entity.unit_number
     local still_intact = entity.health > 0
+    local barriers = {}
     
     local function try_place( x, y )
         if not still_intact then return false end
@@ -996,7 +1022,7 @@ local function Teleporter_create_barrier( data )
             move_stuck_players = true,
         }
         if barrier and barrier.valid then
-            -- Just ignore if the barrier didn't spawn, the teleporter is still intact
+            barriers[ #barriers + 1 ] = barrier
             barrier.destructible = false
         end
         
@@ -1015,6 +1041,7 @@ local function Teleporter_create_barrier( data )
         if not try_place( right + 1, y ) then break end     -- Right border
     end
     
+    data.barriers = barriers
     if still_intact then
         -- Hopefully it didn't get destroyed
         
@@ -1035,26 +1062,11 @@ local function Teleporter_destroy_barrier( data )
     
     --log( "Teleporter_destroy_barrier() : " .. Teleporter_get_nickname( data.poskey ) )
     
-    local entity = data[ TELEPORTER_CONTROLLER ]
-    if not ( entity and entity.valid ) then
-        return
-    end
-    
-    local p = entity.position
-    local surface = entity.surface
-    
-    local barriers = surface.find_entities_filtered{
-        name = "trt-barrier",
-        area = {
-            left_top = { x = p.x - 7, y = p.y - 5 },
-            right_bottom = { x = p.x - 2, y = p.y - 0.5 }
-        }
-    }
-    
-    if barriers then
-        for _, barrier in pairs( barriers ) do
+    if data.barriers then
+        for _, barrier in pairs( data.barriers ) do
             tryDestroy( barrier )
         end
+        data.barriers = nil
     end
 end
 

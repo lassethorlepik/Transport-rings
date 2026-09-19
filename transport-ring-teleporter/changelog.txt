@@ -1,6 +1,21 @@
 ---------------------------------------------------------------------------------------------------
-Version: 0.5.0 - WIP - NOT READY FOR RELEASE
-Date: TBD
+Version: 0.5.1
+Date: 19.09.2026
+  Changes:
+    - Optimized platform circuit reporting: entity results are refreshed every 60 ticks, inventory and fluid results every 120 ticks and, output sections are only rewritten when their signals change
+    - Platform reporting control signals are now read together, reducing circuit network lookups
+    - Character inventories are no longer exposed by the "Inventory on entity" signal; characters themselves are still reported by "Entity on platform"
+    - Dynamic robot teleport settings are evaluated once per robot type during each platform scan
+  Fixes:
+    - Fixed the Factoriopedia simulation referring to removed trt-back and trt-front entity prototypes
+    - Fixed most teleportation barrier entities remaining behind after a teleport or aborted sequence
+    - Fixed moving-entity reporting suppressing character, spidertron and, vehicle summary counts
+    - Fixed normal rail signals not being recognized by the teleporter collision protection list
+    - Fixed fractional fluid amounts being rounded before aggregation in platform reports
+    - Declared teleporter technology early enough for overhaul mods such as Exotic Industries: Remembrance to replace its prerequisites, science packs and, research cost
+---------------------------------------------------------------------------------------------------
+Version: 0.5.0
+Date: 28.08.2026
   Features:
     - Factorio 2.1 support
     - Basic Krastorio 2.0.14+ support

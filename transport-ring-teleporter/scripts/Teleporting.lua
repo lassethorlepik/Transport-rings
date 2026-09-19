@@ -176,8 +176,25 @@ function Teleporting.get_teleportable_objects( entity )
     local raw_objects = get_objects( entity.surface, entity.position )
     
     local result = {}
+    local dynamic_type_cache = {}
+    local function ignored_type_for_scan( entity_type )
+        local entry = ignored_types[ entity_type ]
+        if type( entry ) ~= "table" then
+            return entry == true
+        end
+
+        local cached = dynamic_type_cache[ entity_type ]
+        if cached ~= nil then
+            return cached
+        end
+
+        cached = is_ignored( ignored_types, entity_type ) and true or false
+        dynamic_type_cache[ entity_type ] = cached
+        return cached
+    end
+
     for _, e in pairs( raw_objects ) do
-        if not is_ignored_entity( e.name ) and not is_ignored_type( e.type ) then
+        if not is_ignored_entity( e.name ) and not ignored_type_for_scan( e.type ) then
             result[ #result + 1 ] = e
         end
     end

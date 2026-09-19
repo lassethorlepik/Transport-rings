@@ -181,7 +181,29 @@ data:extend( {
         },
         localised_description = { "entity-description.ring-teleporter", Util.format_power_string( Util.power_per_teleport(), "J", " " ) },
         factoriopedia_simulation = {
-            init = "game.simulation.camera_position = {0, 0}\ngame.surfaces[1].create_entity{name = \"trt-back\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.surfaces[1].create_entity{name = \"trt-front\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.simulation.camera_zoom = 0.8"
+            init = [[
+                local surface = game.surfaces[ 1 ]
+                local anchor = surface.create_entity{
+                    name = "trt-map-interface-mk1",
+                    position = { 0, 0 },
+                    raise_built = false,
+                    create_build_effect_smoke = false
+                }
+                rendering.draw_animation{
+                    animation = "trt-mk1-anim-back",
+                    target = anchor,
+                    surface = surface,
+                    render_layer = "object-under"
+                }
+                rendering.draw_animation{
+                    animation = "trt-mk1-anim-front",
+                    target = anchor,
+                    surface = surface,
+                    render_layer = "cargo-hatch"
+                }
+                game.simulation.camera_position = { -4.5, -3.0 }
+                game.simulation.camera_zoom = 0.8
+            ]]
         },
         --hidden = true,
         --hidden_in_factoriopedia = true,
@@ -225,9 +247,6 @@ data:extend( {
         circuit_connector = { points = mk1_wire },
         circuit_wire_max_distance = 20,
         alert_icon_shift = { 0.125, 0.5  },
-        --factoriopedia_simulation = {
-        --    init = "game.simulation.camera_position = {0, 0}\ngame.surfaces[1].create_entity{name = \"trt-back\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.surfaces[1].create_entity{name = \"trt-front\", position = {0, 0}, raise_built = false, create_build_effect_smoke = false}    game.simulation.camera_zoom = 0.8"
-        --},
         localised_description = { "entity-description.ring-teleporter", Util.format_power_string( Util.power_per_teleport(), "J", " " ) },
         hidden_in_factoriopedia = true,
         hidden = true,
@@ -754,3 +773,7 @@ local tips =
 
 
 data:extend( tips )
+
+-- Declare technologies during the normal data stage so overhaul mods can
+-- transform their prerequisites and science packs in later data stages.
+require( "__transport-ring-teleporter__.technology" )
