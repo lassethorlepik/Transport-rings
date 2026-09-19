@@ -97,7 +97,8 @@ script.on_event( defines.events.on_tick, function( event )
     
     
     -- Teleporter logic
-    for _, data in pairs( storage.ring_teleporter_teleporters ) do
+    local teleporters = storage.ring_teleporter_teleporters -- Deref once
+    for _, data in pairs( teleporters ) do
         Util_interleave_function( INTERVAL_LOGIC, tick, data.unit_number, Teleporter_update_teleporter, data )
     end
     
@@ -109,7 +110,8 @@ script.on_event( defines.events.on_tick, function( event )
     
     
     -- GUI updates
-    for _, data in pairs( storage.ring_teleporter_GUIs ) do
+    local guis = storage.ring_teleporter_GUIs -- Deref once
+    for _, data in pairs( guis ) do
         Util_interleave_function( INTERVAL_GUI, tick, data.player_index, GUI_update_window, data )
     end
     

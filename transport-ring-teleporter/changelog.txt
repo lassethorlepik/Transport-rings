@@ -1,4 +1,24 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.5.0 - WIP - NOT READY FOR RELEASE
+Date: TBD
+  Features:
+    - Factorio 2.1 support
+    - Basic Krastorio 2.0.14+ support
+    - Rebalanced recipes for Space Age DLC and Krastorio 2 - must be selected in the game settings
+    - The output port will now read out what teleportable entities are on the platform as well as the contents of their inventories based on three new input virtual signals sent to the platform: 'Entity on platform', 'Inventory on entity' (includes fluids) and, 'Read moving entities'
+    - Only characters, trains, spidertrons and, vehicles that are stopped / not moving are counted as "on the platform" - this is to prevent triggering circuit conditions as soon as they cross the scan area threshold - this behavior can be overridden by sending the 'Read moving entities' virtual signal to the platform
+    - The number of characters, trains, spidertrons and, vehicles stopped on the teleporter platform will be counted and supplied as the "C", "T", "S" and, "V" virtual signals, respectively, on the output port, if the platform is sent the "Entity on platform" virtual signal
+  Changes:
+    - Removed unfinished Mk2 stubs - may return later but currently unnecessary
+    - Internal refactor of identifiers for consistency and avoid collisions with some previously generic identifier names
+    - Reordered virtual signals, items and, recipes
+    - Rails are no longer teleported with the train, make sure you have matching rails at the destination first
+  Fixes:
+    - Greatly added to the types of entities not teleported
+    - Added rail signals, train stops, wagons and, locomotives to the list of entities not harmed by the teleporter rings
+    - Trains will now be teleported to the correct relative position
+    - Auto build mods should now build teleporters correctly as long as they set the 'raise_built' and 'raise_revive' flags to true in their surface.create_entity and entity.revive calls, respectively
+---------------------------------------------------------------------------------------------------
 Version: 0.4.5
 Date: 16.01.2026
   Bugfixes:

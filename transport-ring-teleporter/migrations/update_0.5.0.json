@@ -1,0 +1,42 @@
+{
+    "collision-layer":
+    [
+        [ "teleporter_ring", "trt_teleporters" ]
+    ],
+    "entity":
+    [
+        [ "ring-teleporter-placer", "trt-placer-mk1" ],
+        [ "ring-teleporter", "trt-platform-mk1" ],
+        [ "ring-teleporter-map-nickname", "trt-map-interface-mk1" ],
+        [ "ring-teleporter-output", "trt-output-mk1" ],
+        [ "ring-teleportation-barrier", "trt-barrier" ]
+    ],
+    "item":
+    [
+        [ "ring-teleporter", "trt-platform-mk1" ],
+        [ "ring-teleporter-bp", "trt-platform-bp-mk1" ],
+        [ "transport-ring", "trt-ring-mk1" ],
+        [ "ring-teleporter-map-nickname", "trt-map-interface-mk1" ],
+        [ "ring-teleporter-output", "trt-output-mk1" ]
+    ],
+    "recipe":
+    [
+        [ "ring-teleporter", "trt-platform-mk1" ],
+        [ "transport-ring", "trt-ring-mk1" ]
+    ],
+    "virtual-signal":
+    [
+        [ "ring-id", "trt-ring-id" ],
+        [ "goto-ring-id", "trt-goto-id" ],
+        [ "shield-rings", "trt-protected" ],
+        [ "ring-timer", "trt-timer" ],
+        [ "ring-status", "trt-status" ],
+        [ "ring-status-low-power", "trt-status-low-power" ],
+        [ "ring-status-occupied", "trt-status-occupied" ],
+        [ "ring-status-waiting", "trt-status-waiting" ]
+    ],
+    "technology":
+    [
+        [ "teleporter-rings", "trt-mk1" ]
+    ]
+}
