@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.5.2
+Date: 02.10.2026
+  Fixes:
+    - Entity on platform signal will now output signal of the source item, not actual entity. This allows players to use combinator logic.
+    - Corrected Space Age dependency to optional dependency.
+---------------------------------------------------------------------------------------------------
 Version: 0.5.1
 Date: 19.09.2026
   Changes:

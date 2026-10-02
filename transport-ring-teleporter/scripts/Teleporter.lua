@@ -559,6 +559,15 @@ local function Teleporter_update_output_port( data )
         end
     end
 
+    local function add_entity( item_counts, entity_counts, entity )
+        local items = entity.prototype.items_to_place_this
+        if items and items[ 1 ] then
+            add_count( item_counts, items[ 1 ].name, entity.quality, 1 )
+        else
+            add_count( entity_counts, entity.name, entity.quality, 1 )
+        end
+    end
+
     local requested = Teleporter_get_signals( entity, {
         [ SIGNAL_DETECT_ENTITIES ] = true,
         [ SIGNAL_READ_INVENTORIES ] = true,
@@ -597,6 +606,7 @@ local function Teleporter_update_output_port( data )
         local train_limit = Util.train_length_limit()
         local trains = {}
         local entity_counts = {}
+        local entity_item_counts = {}
         local inventory_counts = {}
         local fluid_counts = {}
         local summary = { players = 0, trains = 0, spiders = 0, vehicles = 0 }
@@ -621,7 +631,7 @@ local function Teleporter_update_output_port( data )
                 end
 
                 if entity_due then
-                    add_count( entity_counts, e.name, e.quality, 1 )
+                    add_entity( entity_item_counts, entity_counts, e )
                     if entity_type == "car" then
                         summary.vehicles = summary.vehicles + 1
                     elseif entity_type == "character" then
@@ -650,7 +660,7 @@ local function Teleporter_update_output_port( data )
                 if entity_due then summary.trains = summary.trains + 1 end
                 for index, carriage in ipairs( train.carriages ) do
                     if entity_due then
-                        add_count( entity_counts, carriage.name, carriage.quality, 1 )
+                        add_entity( entity_item_counts, entity_counts, carriage )
                     end
                     if inventory_due then
                         for i = 1, carriage.get_max_inventory_index(), 1 do
@@ -667,6 +677,9 @@ local function Teleporter_update_output_port( data )
 
         if entity_due then
             data.output_entity_signals = counts_to_signals( entity_counts, "entity", false )
+            for _, signal in ipairs( counts_to_signals( entity_item_counts, "item", false ) ) do
+                data.output_entity_signals[ #data.output_entity_signals + 1 ] = signal
+            end
             data.output_entity_summary = summary
             data.output_last_entity_scan = tick
         end

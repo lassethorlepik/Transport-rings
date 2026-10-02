@@ -101,18 +101,22 @@ local teleporter_table_desc = {
             tags[ count ] = ""
             
             -- Planets first
-            for _, p in pairs( game.planets ) do
+            for _, p in pairs( game.planets or {} ) do
                 count = count + 1
                 items[ count ] = string.format( "[planet=%s] %s", p.name, p.name )
                 tags[ count ] = p.name
             end
             
-            -- Then space platforms
+            -- Then space platforms and surfaces without a planet
             for _, p in pairs( game.surfaces ) do
                 if p.platform then
                     count = count + 1
                     items[ count ] = string.format( "[img=item.space-platform-hub] %s", p.platform.name )
                     tags[ count ] = p.platform.name
+                elseif not p.planet then
+                    count = count + 1
+                    items[ count ] = p.name
+                    tags[ count ] = p.name
                 end
             end
             
